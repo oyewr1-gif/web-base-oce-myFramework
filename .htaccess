@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1. Jika file fisik yang diminta memang ada (seperti install.php, favicon, dll), buka langsung
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # 2. Izinkan akses langsung ke folder api-info, database, dan docs
+    RewriteRule ^api-info/(.*)$ api-info/$1 [QSA,L]
+    RewriteRule ^api-info/?$ api-info/index.php [QSA,L]
+    RewriteRule ^database/(.*)$ database/$1 [QSA,L]
+    RewriteRule ^docs/(.*)$ docs/$1 [QSA,L]
+
+    # 3. Teruskan request lainnya ke folder public/
+    RewriteRule ^$ public/ [L]
+    RewriteRule ^((?!public/).*)$ public/$1 [L]
+</IfModule>

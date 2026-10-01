@@ -1,0 +1,55 @@
+# ========================================================
+# BERKAS KONFIGURASI SENSITIF & KREDENSIAL (.env)
+# ========================================================
+.env
+.env.backup
+.env.local
+.env.*.local
+api-info/.env
+api-info/.env.backup
+api-info/.env.local
+
+# ========================================================
+# FILE UPLOAD & ASSETS DINAMIS
+# ========================================================
+public/uploads/*
+!public/uploads/.gitignore
+
+# ========================================================
+# LOGS & TEMPORARY FILES
+# ========================================================
+*.log
+*.tmp
+*.temp
+/temp/
+/cache/
+
+# ========================================================
+# DATABASE LOKAL FILE-BASED
+# ========================================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ========================================================
+# OPERATING SYSTEM ARTIFACTS
+# ========================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========================================================
+# IDE & TEXT EDITORS
+# ========================================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+nbproject/
+*.suo
+*.ntvs*
+*.njsproj
