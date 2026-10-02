@@ -27,6 +27,7 @@ class PostController extends Controller
         $this->view('post/read', [
             'pageTitle'   => $post['title'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
             'siteTitle'   => $settings['site_title'] ?? 'CMS',
+            'siteLogo'    => $settings['site_logo'] ?? '',
             'footerText'  => $settings['footer_text'] ?? '© 2026 CMS Framework.',
             'post'        => $post,
             'categories'  => $categories
@@ -57,6 +58,7 @@ class PostController extends Controller
             'pageTitle'      => 'Kategori: ' . $category['name'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
             'siteTitle'      => $settings['site_title'] ?? 'CMS',
             'siteTagline'    => 'Artikel dalam kategori: ' . $category['name'],
+            'siteLogo'       => $settings['site_logo'] ?? '',
             'footerText'     => $settings['footer_text'] ?? '© 2026 CMS Framework.',
             'posts'          => $posts,
             'categories'     => $categories,

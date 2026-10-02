@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle ?? 'Masuk') ?> &mdash; CMS</title>
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/logo-icon.svg') ?>">
     <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>">
     <style>
         body {

@@ -63,6 +63,18 @@ class ApiController
         return $user;
     }
 
+    /**
+     * Middleware Proteksi Hak Akses Administrator
+     */
+    protected function requireAdmin(): array
+    {
+        $user = $this->requireAuth();
+        if (($user['role'] ?? '') !== 'admin') {
+            ApiResponse::error("Akses ditolak. Fitur ini hanya dapat diakses oleh Administrator.", 403);
+        }
+        return $user;
+    }
+
     private function extractToken(): ?string
     {
         // 1. Cek dari getallheaders() (Apache / FPM)

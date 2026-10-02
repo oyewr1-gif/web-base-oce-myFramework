@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle ?? 'Modern PHP MVC CMS') ?></title>
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/logo-icon.svg') ?>">
     <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>">
 </head>
 <body>
@@ -11,8 +12,8 @@
     <header class="site-header">
         <div class="container">
             <nav class="site-nav">
-                <a href="<?= base_url() ?>" class="site-brand">
-                    🚀 <?= e($siteTitle ?? 'Framework CMS') ?>
+                <a href="<?= base_url() ?>" class="site-brand" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <img src="<?= site_logo_url($siteLogo ?? null) ?>" alt="<?= e($siteTitle ?? 'MyFrameWork CMS') ?>" style="height: 38px; width: auto; max-width: 220px; object-fit: contain;" class="site-logo">
                 </a>
                 <ul class="site-links">
                     <li><a href="<?= base_url() ?>">Beranda</a></li>

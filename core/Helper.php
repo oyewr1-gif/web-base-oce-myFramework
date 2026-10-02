@@ -122,3 +122,49 @@ if (!function_exists('is_admin')) {
         return $user && ($user['role'] ?? '') === 'admin';
     }
 }
+
+if (!function_exists('get_site_setting')) {
+    function get_site_setting(string $key, $default = '', bool $fresh = false)
+    {
+        static $settings = null;
+        if ($fresh || $settings === null) {
+            try {
+                if (class_exists('ApiClient')) {
+                    $api = new ApiClient();
+                    $settings = $api->getSettings();
+                } else {
+                    $settings = [];
+                }
+            } catch (Throwable $e) {
+                $settings = [];
+            }
+        }
+        return $settings[$key] ?? $default;
+    }
+}
+
+if (!function_exists('site_logo_url')) {
+    function site_logo_url(?string $customLogo = null, bool $forDark = false): string
+    {
+        $logo = $customLogo;
+        if (empty($logo)) {
+            $logo = get_site_setting('site_logo', '');
+        }
+
+        if (!empty($logo)) {
+            if (str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')) {
+                return $logo;
+            }
+            if (str_starts_with($logo, 'assets/')) {
+                return base_url($logo);
+            }
+            if (str_starts_with($logo, 'uploads/')) {
+                return base_url($logo);
+            }
+            return upload_url($logo);
+        }
+
+        return asset($forDark ? 'images/logo-light.svg' : 'images/logo.svg');
+    }
+}
+
