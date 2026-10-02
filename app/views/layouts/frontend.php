@@ -4,15 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle ?? 'Modern PHP MVC CMS') ?></title>
-    <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/logo-icon.svg') ?>">
+    <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>?v=<?= file_exists(ROOT_PATH . '/public/assets/css/core-ui.css') ? filemtime(ROOT_PATH . '/public/assets/css/core-ui.css') : time() ?>">
+    <style>
+        /* Jaminan tata letak 2 kolom di layar lebar dan landscape */
+        .portal-layout {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 2rem;
+            align-items: start;
+        }
+        .portal-main { min-width: 0; width: 100%; }
+        .portal-sidebar { min-width: 0; width: 100%; }
+
+        @media (max-width: 1024px) {
+            .portal-layout {
+                grid-template-columns: minmax(0, 1fr) 290px;
+                gap: 1.25rem;
+            }
+        }
+
+        /* Saat orientasi landscape pada layar horizontal (tablet / HP lebar), sidebar tetap di samping */
+        @media (orientation: landscape) and (min-width: 560px) {
+            .portal-layout {
+                grid-template-columns: minmax(0, 1fr) 270px;
+                gap: 1rem;
+            }
+        }
+
+        /* Hanya bertumpuk ke bawah pada HP mode portrait atau layar sangat sempit */
+        @media (max-width: 720px) and (orientation: portrait), (max-width: 540px) {
+            .portal-layout {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header Publik -->
     <header class="site-header">
         <div class="container">
             <nav class="site-nav">
-                <a href="<?= base_url() ?>" class="site-brand">
-                    🚀 <?= e($siteTitle ?? 'Framework CMS') ?>
+                <a href="<?= base_url() ?>" class="site-brand" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <img src="<?= site_logo_url($siteLogo ?? null) ?>" alt="<?= e($siteTitle ?? 'MyFrameWork CMS') ?>" style="height: 38px; width: auto; max-width: 220px; object-fit: contain;" class="site-logo">
                 </a>
                 <ul class="site-links">
                     <li><a href="<?= base_url() ?>">Beranda</a></li>

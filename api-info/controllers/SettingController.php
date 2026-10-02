@@ -13,6 +13,7 @@ class SettingController extends ApiController
         $publicSettings = [
             'site_title'   => $settings['site_title'] ?? '',
             'site_tagline' => $settings['site_tagline'] ?? '',
+            'site_logo'    => $settings['site_logo'] ?? '',
             'footer_text'  => $settings['footer_text'] ?? ''
         ];
 
@@ -21,7 +22,7 @@ class SettingController extends ApiController
 
     public function all(): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
         $settingModel = new ApiSetting();
         $settings = $settingModel->allAsKeyVal();
 
@@ -30,10 +31,10 @@ class SettingController extends ApiController
 
     public function update(): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
 
         $settingModel = new ApiSetting();
-        $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'footer_text'];
+        $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'site_logo', 'footer_text'];
         
         $updated = [];
         foreach ($allowedKeys as $key) {

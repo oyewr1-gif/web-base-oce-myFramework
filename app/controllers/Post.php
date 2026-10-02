@@ -23,12 +23,16 @@ class PostController extends Controller
 
         $categories = $api->getCategories();
         $settings   = $api->getSettings();
+        $recentResult = $api->getPosts(5, 1);
+        $recentPosts  = $recentResult['data'] ?? [];
 
         $this->view('post/read', [
             'pageTitle'   => $post['title'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
             'siteTitle'   => $settings['site_title'] ?? 'CMS',
+            'siteLogo'    => $settings['site_logo'] ?? '',
             'footerText'  => $settings['footer_text'] ?? '© 2026 CMS Framework.',
             'post'        => $post,
+            'recentPosts' => $recentPosts,
             'categories'  => $categories
         ], 'layouts/frontend');
     }
@@ -57,8 +61,10 @@ class PostController extends Controller
             'pageTitle'      => 'Kategori: ' . $category['name'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
             'siteTitle'      => $settings['site_title'] ?? 'CMS',
             'siteTagline'    => 'Artikel dalam kategori: ' . $category['name'],
+            'siteLogo'       => $settings['site_logo'] ?? '',
             'footerText'     => $settings['footer_text'] ?? '© 2026 CMS Framework.',
             'posts'          => $posts,
+            'recentPosts'    => array_slice($posts, 0, 5),
             'categories'     => $categories,
             'activeCategory' => $category
         ], 'layouts/frontend');

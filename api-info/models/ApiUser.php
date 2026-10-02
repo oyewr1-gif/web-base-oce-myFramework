@@ -32,4 +32,41 @@ class ApiUser extends ApiModel
         ]);
         return $token;
     }
+
+    public function allSafe(): array
+    {
+        $sql = "SELECT id, username, name, email, role, created_at, updated_at FROM {$this->table} ORDER BY id ASC";
+        return $this->query($sql);
+    }
+
+    public function findSafe($id): ?array
+    {
+        $sql = "SELECT id, username, name, email, role, created_at, updated_at FROM {$this->table} WHERE id = :id LIMIT 1";
+        $results = $this->query($sql, ['id' => $id]);
+        return $results ? $results[0] : null;
+    }
+
+    public function findByUsername(string $username, ?int $excludeId = null): ?array
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE username = :u";
+        $params = ['u' => $username];
+        if ($excludeId !== null) {
+            $sql .= " AND id != :eid";
+            $params['eid'] = $excludeId;
+        }
+        $results = $this->query($sql . " LIMIT 1", $params);
+        return $results ? $results[0] : null;
+    }
+
+    public function findByEmail(string $email, ?int $excludeId = null): ?array
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE email = :e";
+        $params = ['e' => $email];
+        if ($excludeId !== null) {
+            $sql .= " AND id != :eid";
+            $params['eid'] = $excludeId;
+        }
+        $results = $this->query($sql . " LIMIT 1", $params);
+        return $results ? $results[0] : null;
+    }
 }

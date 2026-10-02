@@ -23,7 +23,8 @@ INSERT INTO `settings` (`id`, `setting_key`, `setting_value`) VALUES
 (1, 'site_title', 'Modern PHP MVC CMS'),
 (2, 'site_tagline', 'Framework Ringan, Cepat, dan Mandiri'),
 (3, 'admin_email', 'admin@cms.local'),
-(4, 'footer_text', '© 2026 Modern PHP MVC CMS. Hak Cipta Dilindungi.')
+(4, 'footer_text', '© 2026 Modern PHP MVC CMS. Hak Cipta Dilindungi.'),
+(5, 'site_logo', '')
 ON DUPLICATE KEY UPDATE `setting_value`=VALUES(`setting_value`);
 
 -- Seed Token API Default

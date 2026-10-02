@@ -1,7 +1,9 @@
 <div class="text-center mb-4">
-    <div style="font-size: 2.5rem; line-height: 1;">⚡</div>
-    <h2 style="margin-top: 0.5rem; font-size: 1.5rem;">CMS Admin</h2>
-    <p class="text-muted" style="font-size: 0.88rem;">Silakan login untuk mengelola konten website</p>
+    <a href="<?= base_url() ?>">
+        <img src="<?= site_logo_url() ?>" alt="MyFrameWork CMS" style="height: 48px; width: auto; max-width: 240px; margin-bottom: 0.5rem; object-fit: contain;">
+    </a>
+    <h2 style="margin-top: 0.25rem; font-size: 1.35rem;">Masuk ke Panel Konten</h2>
+    <p class="text-muted" style="font-size: 0.88rem;">Silakan login untuk mengelola artikel dan konten website</p>
 </div>
 
 <form action="<?= base_url('auth/login') ?>" method="POST">
@@ -9,7 +11,7 @@
 
     <div class="form-group">
         <label for="identity" class="form-label">Email atau Username</label>
-        <input type="text" id="identity" name="identity" class="form-control" placeholder="admin@cms.local" required autofocus>
+        <input type="text" id="identity" name="identity" class="form-control" placeholder="admin@cms.local / editor@cms.local" required autofocus>
     </div>
 
     <div class="form-group">
@@ -25,10 +27,10 @@
 </form>
 
 <div class="card mt-4" style="background: #f8fafc; border: 1px dashed var(--border-color); padding: 0.85rem; margin-bottom: 0;">
-    <div style="font-size: 0.8rem; color: var(--text-muted);">
-        <strong>Kredensial Bawaan Seeder:</strong><br>
-        Email: <code>admin@cms.local</code><br>
-        Password: <code>admin123</code>
+    <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+        <strong>Kredensial Default:</strong><br>
+        &bull; <strong>Admin:</strong> <code>admin@cms.local</code> / <code>admin123</code> (Akses Penuh + Users)<br>
+        &bull; <strong>Editor:</strong> <code>editor@cms.local</code> / <code>editor123</code> (Khusus Artikel & Media)
     </div>
 </div>
 

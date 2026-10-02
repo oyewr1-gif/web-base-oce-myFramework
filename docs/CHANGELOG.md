@@ -4,6 +4,45 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.3.6] - 2026-10-02
+### Standarisasi Unggah Berkas Fisik Eksklusif di Front-End (`public/uploads`) & Eliminasi Ketergantungan API Upload
+
+#### Diperbaiki & Dioptimalkan (Fixed & Enhanced)
+- **Eliminasi Pengiriman Binary ke REST API**:
+  - `app/controllers/admin/Media.php`: Seluruh proses unggah media kini menyimpan berkas secara langsung dan eksklusif ke folder front-end `public/uploads/`. REST API (`api-info`) murni digunakan untuk mencatat metadata ke database MySQL (`registerMedia`).
+  - `app/controllers/admin/Settings.php`: Unggah logo situs web kini disimpan langsung ke `public/uploads/` front-end tanpa fallback pengiriman binary ke REST API.
+  - `app/controllers/admin/Posts.php`: Unggah gambar sampul/thumbnail artikel (`create` & `edit`) disimpan langsung ke `public/uploads/` front-end dan metadata didaftarkan ke REST API.
+- **Helper Global Penyimpanan Unggahan (`core/Helper.php`)**:
+  - `upload_dir()`: Mendeteksi dan memastikan direktori `public/uploads` front-end web server tersedia dengan hak akses yang tepat.
+  - `save_uploaded_media()`: Menangani validasi ekstensi, sanitasi nama berkas, pembuatan direktori, dan pemindahan berkas dengan pelaporan error yang secara akurat menunjuk ke folder penyimpanan front-end (bukan lagi folder server API).
+- **Penanganan Error Terisolasi**:
+  - Mengeliminasi error *"Folder penyimpanan '/var/www/api/api-info/uploads' tidak memiliki izin tulis"* pada server API, karena REST API tidak lagi dipaksa menyimpan berkas fisik media.
+
+---
+
+## [1.3.5] - 2026-10-02
+### Perbaikan Posisi Sidebar Pada Layar Lebar & Mode Landscape
+
+#### Diperbaiki & Dioptimalkan (Fixed & Enhanced)
+- **CSS Grid Responsif `.portal-layout` (`public/assets/css/core-ui.css`)**:
+  - Mengoreksi breakpoint responsif agar sidebar tetap berada di samping (*side-by-side*) pada layar laptop, desktop, dan mode landscape ponsel (`min-width: 560px`).
+  - Hanya beralih ke 1 kolom vertikal saat ponsel berada dalam posisi tegak (*portrait*).
+- **Cache-Busting & In-Head Style Guarantee (`app/views/layouts/frontend.php`)**:
+  - Menambahkan query parameter `?v=filemtime` dan menyisipkan CSS inline di `<head>` agar perubahan tata letak langsung aktif tanpa tertahan cache browser.
+
+---
+
+## [1.3.4] - 2026-10-02
+### Penambahan Sidebar Portal Informasi Al-Munawwariyyah & Master Users
+
+#### Ditambahkan (Added)
+- **Sidebar Portal Informasi (`app/views/partials/frontend_sidebar.php`)**:
+  - Memuat link PPDB, lembaga pendidikan (SMK, SMA, SMP, SD, MIM), channel media sosial, kategori artikel dinamis, berita terkini, dan counter pengunjung.
+- **Manajemen Pengguna (Master Users) & Level Editor**:
+  - CRUD User Admin & Editor pada `app/controllers/admin/Users.php` dan `api-info/controllers/UserController.php`.
+
+---
+
 ## [1.2.1] - 2026-10-02
 ### Perbaikan Otentikasi Unggah Media & Auto-Healing Sesi REST API
 

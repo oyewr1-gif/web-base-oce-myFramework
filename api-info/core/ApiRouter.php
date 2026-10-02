@@ -32,6 +32,8 @@ class ApiRouter
             'media'      => 'MediaController',
             'dashboard'  => 'DashboardController',
             'stats'      => 'DashboardController',
+            'user'       => 'UserController',
+            'users'      => 'UserController',
         ];
 
         $controllerName = $controllerMap[$resource] ?? (ucfirst($resource) . 'Controller');

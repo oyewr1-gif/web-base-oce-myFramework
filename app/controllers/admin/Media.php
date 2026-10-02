@@ -38,13 +38,28 @@ class MediaController extends Controller
                 return;
             }
 
-            $api = new ApiClient();
-            $result = $api->uploadMedia($file);
+            // Simpan berkas fisik langsung ke front-end public/uploads/
+            $upload = save_uploaded_media($file);
+            if (!$upload['success']) {
+                flash('error', $upload['error']);
+                $this->redirect('admin/media');
+                return;
+            }
 
-            if ($result) {
-                flash('success', 'File berhasil diunggah!');
+            // Catat metadata media ke database via REST API
+            $api = new ApiClient();
+            $result = $api->registerMedia([
+                'filename'      => $upload['filename'],
+                'original_name' => $upload['original_name'],
+                'file_path'     => $upload['file_path'],
+                'mime_type'     => $upload['mime_type'],
+                'file_size'     => $upload['file_size']
+            ]);
+
+            if ($result !== null) {
+                flash('success', 'File media berhasil diunggah ke front-end!');
             } else {
-                flash('error', $api->getLastError() ?: 'Gagal memproses unggahan file via API.');
+                flash('error', 'File tersimpan di front-end, namun gagal mencatat ke database API: ' . ($api->getLastError() ?: 'Kesalahan API.'));
             }
         }
 
@@ -55,6 +70,23 @@ class MediaController extends Controller
     {
         $id = (int)$id;
         $api = new ApiClient();
+
+        // 1. Ambil daftar media untuk hapus file fisik lokal jika ada
+        $mediaList = $api->getMedia();
+        $target = null;
+        foreach ($mediaList as $item) {
+            if ((int)$item['id'] === $id) {
+                $target = $item;
+                break;
+            }
+        }
+
+        if ($target && !empty($target['filename'])) {
+            $localFile = upload_dir() . basename($target['filename']);
+            if (file_exists($localFile) && is_file($localFile)) {
+                @unlink($localFile);
+            }
+        }
 
         if ($id > 0 && $api->deleteMedia($id)) {
             flash('success', 'File media berhasil dihapus.');

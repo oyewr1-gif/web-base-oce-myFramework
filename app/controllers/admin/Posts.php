@@ -49,13 +49,24 @@ class PostsController extends Controller
 
             $slug = empty($slug) ? slugify($title) : slugify($slug);
 
-            // Handle upload thumbnail via API jika ada file
+            // Handle upload thumbnail di front-end jika ada file
             $thumbnailPath = null;
             $thumbFile = $this->request->file('thumbnail');
-            if ($thumbFile && $thumbFile['error'] === UPLOAD_ERR_OK) {
-                $uploadRes = $api->uploadMedia($thumbFile);
-                if ($uploadRes && !empty($uploadRes['filename'])) {
-                    $thumbnailPath = $uploadRes['filename'];
+            if ($thumbFile && !empty($thumbFile['name']) && ($thumbFile['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK) {
+                $upload = save_uploaded_media($thumbFile, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
+                if ($upload['success']) {
+                    $thumbnailPath = $upload['filename'];
+                    $api->registerMedia([
+                        'filename'      => $upload['filename'],
+                        'original_name' => $upload['original_name'],
+                        'file_path'     => $upload['file_path'],
+                        'mime_type'     => $upload['mime_type'],
+                        'file_size'     => $upload['file_size']
+                    ]);
+                } else {
+                    flash('error', 'Gagal mengunggah thumbnail: ' . $upload['error']);
+                    $this->redirect('admin/posts/create');
+                    return;
                 }
             }
 
@@ -123,13 +134,24 @@ class PostsController extends Controller
 
             $slug = empty($slug) ? slugify($title) : slugify($slug);
 
-            // Handle upload thumbnail baru jika diunggah
+            // Handle upload thumbnail baru di front-end jika diunggah
             $thumbnailPath = $post['thumbnail'] ?? null;
             $thumbFile = $this->request->file('thumbnail');
-            if ($thumbFile && $thumbFile['error'] === UPLOAD_ERR_OK) {
-                $uploadRes = $api->uploadMedia($thumbFile);
-                if ($uploadRes && !empty($uploadRes['filename'])) {
-                    $thumbnailPath = $uploadRes['filename'];
+            if ($thumbFile && !empty($thumbFile['name']) && ($thumbFile['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK) {
+                $upload = save_uploaded_media($thumbFile, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
+                if ($upload['success']) {
+                    $thumbnailPath = $upload['filename'];
+                    $api->registerMedia([
+                        'filename'      => $upload['filename'],
+                        'original_name' => $upload['original_name'],
+                        'file_path'     => $upload['file_path'],
+                        'mime_type'     => $upload['mime_type'],
+                        'file_size'     => $upload['file_size']
+                    ]);
+                } else {
+                    flash('error', 'Gagal mengunggah thumbnail: ' . $upload['error']);
+                    $this->redirect('admin/posts/edit/' . $id);
+                    return;
                 }
             }
 

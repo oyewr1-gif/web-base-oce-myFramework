@@ -401,6 +401,15 @@ class ApiClient
         return $decoded['data'] ?? null;
     }
 
+    public function registerMedia(array $data, ?string $token = null): ?array
+    {
+        $resp = $this->request('POST', 'media/upload', $data, $token);
+        if ($resp && ($resp['status'] ?? '') === 'success') {
+            return $resp['data'] ?? [];
+        }
+        return null;
+    }
+
     public function deleteMedia(int $id, ?string $token = null): bool
     {
         $resp = $this->request('DELETE', 'media/delete/' . $id, [], $token);
@@ -423,8 +432,51 @@ class ApiClient
     {
         $resp = $this->request('POST', 'settings/update', $settings, $token);
         if ($resp && ($resp['status'] ?? '') === 'success') {
+            if (function_exists('get_site_setting')) {
+                get_site_setting('', '', true);
+            }
             return $resp['data'] ?? [];
         }
         return null;
+    }
+
+    // ========================================================
+    // 7. PENGELOLAAN PENGGUNA (USERS / MASTER USERS)
+    // ========================================================
+
+    public function getUsers(?string $token = null): array
+    {
+        $resp = $this->request('GET', 'users', [], $token);
+        return $resp['data'] ?? [];
+    }
+
+    public function getUser(int $id, ?string $token = null): ?array
+    {
+        $resp = $this->request('GET', 'users/read/' . $id, [], $token);
+        return $resp['data'] ?? null;
+    }
+
+    public function createUser(array $data, ?string $token = null): ?array
+    {
+        $resp = $this->request('POST', 'users/create', $data, $token);
+        if ($resp && ($resp['status'] ?? '') === 'success') {
+            return $resp['data'] ?? [];
+        }
+        return null;
+    }
+
+    public function updateUser(int $id, array $data, ?string $token = null): ?array
+    {
+        $resp = $this->request('PUT', 'users/update/' . $id, $data, $token);
+        if ($resp && ($resp['status'] ?? '') === 'success') {
+            return $resp['data'] ?? [];
+        }
+        return null;
+    }
+
+    public function deleteUser(int $id, ?string $token = null): bool
+    {
+        $resp = $this->request('DELETE', 'users/delete/' . $id, [], $token);
+        return $resp !== null && ($resp['status'] ?? '') === 'success';
     }
 }
