@@ -19,11 +19,18 @@
         </div>
         <ul class="sidebar-links">
             <li>
-                <a href="https://ppdb.almunawwariyyah.sch.id" target="_blank" rel="noopener">
+                <a href="https://info.almunawwariyyah.sch.id/Ppdb" target="_blank" rel="noopener">
                     <span>📌</span>
                     <span>Info PPDB Utama</span>
                 </a>
                 <span class="social-pill web">Web &nearr;</span>
+            </li>
+            <li>
+                <a href="https://ppdb.almunawwariyyah.sch.id" target="_blank" rel="noopener">
+                     <span>📋</span>
+                    <span>Portal Pendaftaran Online</span>
+                </a>
+                <span class="social-pill web">Daftar &nearr;</span>
             </li>
             <li>
                 <a href="https://ppdb.almunamedia.s-net.id" target="_blank" rel="noopener">
