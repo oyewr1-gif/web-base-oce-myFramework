@@ -4,6 +4,65 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.3.1] - 2026-10-02
+### Fitur Penggantian Logo pada Pengaturan Situs Web (Khusus Administrator)
+
+#### Ditambahkan (Added)
+- **Modul Penggantian Logo di Pengaturan Situs (`/admin/settings`)**:
+  - Dukungan unggah berkas logo baru secara langsung via input file (`.png`, `.jpg`, `.jpeg`, `.svg`, `.webp`).
+  - Unggahan berkas logo diteruskan secara headless ke endpoint API Media (`/media/upload`) via `ApiClient::uploadMedia()`, dan path file otomatis disimpan ke pengaturan `site_logo`.
+  - Dukungan input URL / path kustom untuk fleksibilitas referensi logo eksternal atau galeri media yang sudah ada.
+  - Fitur **Pratinjau Langsung (Live Preview)**: Pengguna dapat langsung melihat preview logo sebelum formulir disimpan menggunakan JavaScript FileReader.
+  - Opsi reset/hapus logo kustom (`remove_logo`) untuk mengembalikan logo ke SVG standar sistem kapan saja.
+  - Indikator status logo aktif: Menampilkan status apakah situs sedang menggunakan "Logo Kustom Aktif" atau "Logo Standar (SVG Default)".
+- **Fungsi Helper Global**:
+  - `site_logo_url(?string $customLogo = null, bool $forDark = false): string`: Helper cerdas untuk menyelesaikan URL absolut logo brand, mendukung path relatif `uploads/`, path aset lokal, URL CDN eksternal, dan fallback otomatis ke SVG default sistem.
+  - `get_site_setting(string $key, $default = '', bool $fresh = false)`: Helper untuk mengambil konfigurasi situs secara efisien dengan in-memory static cache.
+
+#### Diperbarui (Updated)
+- **Pengendali Admin Settings (`app/controllers/admin/Settings.php`)**:
+  - Menambahkan penanganan key `site_logo` pada daftar allowed keys.
+  - Memproses unggahan berkas logo (`logo_file`) melalui REST API.
+  - Memproses aksi pembersihan/reset logo kembali ke bawaan.
+- **Tampilan Antarmuka (Views & Layouts)**:
+  - `app/views/admin/settings/index.php`: Antarmuka formulir diperluas dengan kartu pengelolaan logo, badge hak akses Administrator, dan script live preview.
+  - `app/views/layouts/frontend.php`: Menggunakan `site_logo_url($siteLogo ?? null)` sehingga perubahan logo di admin langsung tercermin di header portal publik.
+  - `app/views/layouts/admin.php`: Menggunakan `site_logo_url(null, true)` agar sidebar admin juga menggunakan logo kustom jika diatur.
+  - `app/views/auth/login.php`: Menggunakan `site_logo_url()` untuk menampilkan logo kustom pada kartu login.
+  - `app/controllers/Post.php`: Mengirimkan variabel `siteLogo` ke view publik (read artikel & filter kategori).
+- **Proteksi Otorisasi (RBAC)**:
+  - Modul pengaturan situs dan perubahan logo tetap diproteksi ketat hanya untuk user dengan peran Administrator (`requireAdmin()`).
+  - Editor artikel diblokir dari mengakses atau mengubah pengaturan (HTTP 403 Forbidden).
+
+---
+
+## [1.3.0] - 2026-10-02
+### Integrasi Logo Resmi Brand & Master Pengguna dengan Peran Editor (RBAC)
+
+#### Ditambahkan (Added)
+- **Aset Logo Vektor SVG**:
+  - `public/assets/images/logo.svg`: Logo utama berwarna modern dengan perpaduan gradien indigo-cyan dan aksen rose-orange untuk tema terang.
+  - `public/assets/images/logo-light.svg`: Varian logo terang khusus untuk latar belakang gelap (sidebar admin panel).
+  - `public/assets/images/logo-icon.svg`: Favicon dan icon mark kompak mandiri (*standalone vector*).
+- **Master Pengguna (Users Management)**:
+  - `api-info/controllers/UserController.php`: Endpoint REST API (`/users`) untuk operasi CRUD pengguna (Daftar, Detail, Tambah, Edit, Hapus).
+  - `app/controllers/admin/Users.php`: Controller admin panel untuk manajemen pengguna dengan proteksi otorisasi khusus Administrator.
+  - `app/views/admin/users/index.php`, `create.php`, `edit.php`: Tampilan antarmuka master pengguna dengan tabel, badge level peran, form tambah & edit, dan petunjuk hak akses.
+  - `core/ApiClient.php`: Method baru `getUsers()`, `getUser()`, `createUser()`, `updateUser()`, `deleteUser()`.
+
+#### Diubah & Ditingkatkan (Changed & Enhanced)
+- **Role-Based Access Control (RBAC) & Peran Editor**:
+  - **Administrator (`admin`)**: Memiliki akses penuh ke seluruh modul sistem (Master Users, Pengaturan Situs, Artikel, Kategori, Media).
+  - **Editor Artikel (`editor`)**: Khusus memproduksi dan mengurasi konten (Artikel, Kategori, Media). Menu Master Users dan Pengaturan Situs otomatis disembunyikan dari sidebar, dan akses rute URL langsung dicegah dengan proteksi 403 Forbidden.
+  - Proteksi akun mandiri: Administrator dicegah menghapus akun miliknya sendiri saat sedang aktif login.
+- **Tampilan Antarmuka (Layouts)**:
+  - `app/views/layouts/frontend.php`: Menyematkan logo resmi brand dan favicon pada header navigasi portal publik.
+  - `app/views/layouts/admin.php`: Menyematkan logo terang pada sidebar brand, favicon, menu "Master Pengguna" khusus admin, dan badge peran dinamis (`⚡ Administrator` atau `✍️ Editor`) pada topbar profil.
+  - `app/views/auth/login.php`: Menampilkan logo brand dan petunjuk kredensial akun bawaan untuk Administrator dan Editor.
+  - `api-info/controllers/SettingController.php`: Menambahkan dukungan pengaturan `site_logo` dan proteksi `requireAdmin()`.
+
+---
+
 ## [1.2.1] - 2026-10-02
 ### Perbaikan Otentikasi Unggah Media & Auto-Healing Sesi REST API
 

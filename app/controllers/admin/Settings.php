@@ -22,15 +22,35 @@ class SettingsController extends Controller
                 return;
             }
 
-            $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'footer_text'];
+            $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'site_logo', 'footer_text'];
             $postData = [];
             foreach ($allowedKeys as $key) {
-                $postData[$key] = trim((string)$this->request->post($key));
+                if ($this->request->post($key) !== null) {
+                    $postData[$key] = trim((string)$this->request->post($key));
+                }
+            }
+
+            // Opsi 1: Reset / hapus logo kustom jika checkbox remove_logo dicentang
+            if ($this->request->post('remove_logo') === '1') {
+                $postData['site_logo'] = '';
+            }
+
+            // Opsi 2: Unggah berkas logo baru jika pengguna memilih file
+            $logoFile = $this->request->file('logo_file');
+            if ($logoFile && !empty($logoFile['name']) && ($logoFile['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK) {
+                $uploadResult = $api->uploadMedia($logoFile);
+                if ($uploadResult && !empty($uploadResult['file_path'])) {
+                    $postData['site_logo'] = $uploadResult['file_path'];
+                } else {
+                    flash('error', 'Gagal mengunggah logo: ' . ($api->getLastError() ?: 'Format atau ukuran file tidak didukung.'));
+                    $this->redirect('admin/settings');
+                    return;
+                }
             }
 
             $result = $api->updateSettings($postData);
             if ($result) {
-                flash('success', 'Pengaturan situs web berhasil diperbarui via API!');
+                flash('success', 'Pengaturan situs dan logo berhasil diperbarui!');
             } else {
                 flash('error', $api->getLastError() ?: 'Gagal memperbarui pengaturan via API.');
             }
