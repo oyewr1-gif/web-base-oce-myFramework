@@ -21,6 +21,7 @@ class HomeController extends Controller
             'siteTagline' => $settings['site_tagline'] ?? 'Framework Mandiri Cepat & Ringan',
             'footerText'  => $settings['footer_text'] ?? '© 2026 CMS Framework.',
             'posts'       => $posts,
+            'recentPosts' => array_slice($posts, 0, 5),
             'categories'  => $categories
         ], 'layouts/frontend');
     }

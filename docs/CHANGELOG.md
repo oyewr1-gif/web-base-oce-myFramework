@@ -4,6 +4,59 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.3.5] - 2026-10-02
+### Perbaikan Posisi Sidebar Pada Layar Lebar & Mode Landscape
+
+#### Diperbaiki & Dioptimalkan (Fixed & Enhanced)
+- **CSS Grid Responsif `.portal-layout` (`public/assets/css/core-ui.css`)**:
+  - Mengoreksi breakpoint responsif yang sebelumnya memicu *single-column collapse* terlalu cepat pada `@media (max-width: 960px)` (yang mencakup laptop berskala 125%/150%, tablet, dan orientasi landscape ponsel).
+  - Menetapkan tata letak berdampingan 2 kolom (*side-by-side*) yang kokoh:
+    - **Layar Komputer & Desktop (> 1024px)**: Kolom utama fleksibel + sidebar 340px, gap 2rem.
+    - **Layar Laptop / Tablet (769px - 1024px)**: Kolom utama fleksibel + sidebar 290px, gap 1.25rem.
+    - **Mode Landscape HP / Tablet (`@media (orientation: landscape) and (min-width: 560px)`)**: Sidebar tetap berada di samping dengan lebar 270px, gap 1rem.
+    - **Mode Vertikal/Portrait Ponsel Sempit (`@media (max-width: 720px) and (orientation: portrait), (max-width: 540px)`)**: Sidebar hanya bertumpuk ke bawah (*stacked*) jika pengguna memegang perangkat ponsel secara tegak.
+- **Cache-Busting & Jaminan Layout di Head Layout (`app/views/layouts/frontend.php`)**:
+  - Menambahkan query parameter versi otomatis berbasis waktu modifikasi berkas (`?v=filemtime`) pada tautan `core-ui.css` guna mengatasi *browser caching* yang agresif pada browser klien.
+  - Menyisipkan aturan gaya tata letak inline di dalam `<head>` layout frontend untuk menjamin rendering grid 2 kolom langsung aktif seketika tanpa tertunda cache berkas eksternal.
+- **Pencegahan Overflow Gambar (`public/assets/css/core-ui.css`)**:
+  - Menambahkan aturan reset global `img { max-width: 100%; height: auto; }` agar konten gambar tidak memicu pelebaran kontainer kolom grid secara berlebih.
+
+---
+
+## [1.3.4] - 2026-10-02
+### Penambahan Sidebar Portal Informasi & Tautan Lembaga (Model Al Munawwariyyah)
+
+#### Ditambahkan (Added)
+- **Komponen Sidebar Portal Publik (`app/views/partials/frontend_sidebar.php`)**:
+  - Diadaptasi dari struktur portal informasi [info.almunawwariyyah.sch.id](https://info.almunawwariyyah.sch.id/).
+  - **Widget 1: Link & Lembaga Pendidikan**:
+    - **PPDB Online**: Tautan Info PPDB Utama & Portal Pendaftaran Online.
+    - **SMK Al Munawwariyyah**: Website resmi, channel YouTube (@smkalmunawwariyyah821), dan Instagram resmi (@smkalmunawwariyyah).
+    - **SMA Al Munawwariyyah**: Website/profil SMA, channel YouTube (@creativesmaalmunawwariyyah2093), Instagram (@smaalmunawwariyyah), TikTok (@smaalmunawwariyyah), Kliping Digital SMA, dan Portofolio Double Track SMA.
+    - **SMP Al Munawwariyyah**: Profil & Informasi SMP dan Instagram resmi (@smp_al_munawwariyyah).
+    - **SD & MIM**: Link informasi SD Al Munawwariyyah dan Madrasah Ibtidaiyah (MIM).
+  - **Widget 2: Kategori Topik Artikel**:
+    - Dinamis menampilkan kategori dari REST API beserta badge total artikel aktif.
+  - **Widget 3: Artikel & Berita Terkini**:
+    - Menampilkan 5 artikel teranyar lengkap dengan thumbnail pratinjau, judul, dan tanggal rilis.
+  - **Widget 4: Info Kampus & Visitor Counter**:
+    - Menampilkan alamat resmi kampus Pesantren (Raya Sudimoro 9 Bululawang, Malang) dan lencana penghitung pengunjung (*Visitor Counter*) interaktif.
+- **Desain CSS Grid & Responsif (`public/assets/css/core-ui.css`)**:
+  - Class tata letak `.portal-layout`, `.portal-main`, dan `.portal-sidebar`.
+  - Desain kartu widget (`.sidebar-widget`, `.sidebar-widget-header`, `.sidebar-group-title`).
+  - Badge pil media sosial (`.social-pill` untuk YouTube, Instagram, TikTok, Dokumen, dan Web).
+  - Responsif: Berjejer 2 kolom (konten + sidebar 350px) pada desktop, dan bertransformasi otomatis menjadi 1 kolom vertikal rapi pada perangkat tablet/ponsel (`@media max-width: 960px`).
+
+#### Diperbarui (Updated)
+- **Tampilan Beranda (`app/views/home/index.php`)**:
+  - Mengintegrasikan tata letak portal dengan grid 2 kolom untuk artikel bersanding dengan sidebar Al Munawwariyyah.
+- **Tampilan Baca Artikel (`app/views/post/read.php`)**:
+  - Menggantikan sidebar kategori lama dengan komponen `frontend_sidebar.php` yang kaya informasi dan seragam di seluruh portal.
+- **Controller Frontend (`app/controllers/Home.php` & `app/controllers/Post.php`)**:
+  - Menyediakan variabel `$recentPosts` ke view portal untuk mengisi widget artikel terkini pada sidebar.
+
+---
+
 ## [1.3.3] - 2026-10-02
 ### Prioritas Penyimpanan Langsung di Front-End (`public/uploads`) & Sinkronisasi Metadata API
 
