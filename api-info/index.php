@@ -28,6 +28,23 @@ if (!empty($config['timezone'])) {
     date_default_timezone_set($config['timezone']);
 }
 
-// Jalankan API Router
-$router = new ApiRouter();
-$router->dispatch();
+// Global Exception Handler: Pastikan semua uncaught exception di REST API mengembalikan format JSON
+set_exception_handler(function (\Throwable $e) {
+    ApiResponse::error("Kesalahan server API: " . $e->getMessage(), 500);
+});
+
+// Global Shutdown Function: Tangani fatal error PHP di server API agar tetap berformat JSON
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ApiResponse::error("Fatal Error server API: " . $error['message'] . " (file: " . basename($error['file']) . ":" . $error['line'] . ")", 500);
+    }
+});
+
+// Jalankan API Router dalam blok try-catch
+try {
+    $router = new ApiRouter();
+    $router->dispatch();
+} catch (\Throwable $e) {
+    ApiResponse::error("Kesalahan eksekusi API: " . $e->getMessage(), 500);
+}

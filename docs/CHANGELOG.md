@@ -4,6 +4,24 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.3.7] - 2026-10-02
+### Penanganan Tangguh REST API Media, Auto-Migrasi Tabel `media`, & Penanganan Respons JSON
+
+#### Diperbaiki & Dioptimalkan (Fixed & Enhanced)
+- **Auto-Migrasi Otomatis Tabel Database `media` (`api-info/models/ApiMedia.php`)**:
+  - Menambahkan method `ensureTableExists()` untuk secara otomatis membuat tabel `media` di database server API jika tabel belum tersedia.
+  - Memeriksa dan menambahkan kolom-kolom yang diperlukan (`original_name`, `mime_type`, `file_size`) secara otomatis jika database pada server produksi masih menggunakan struktur versi terdahulu.
+- **Penanganan Error REST API & Global Handlers (`api-info/index.php`)**:
+  - Mendaftarkan `set_exception_handler` dan `register_shutdown_function` di entry point `api-info` agar setiap error PHP atau uncaught exception selalu menghasilkan respons JSON valid dengan kode HTTP yang sesuai, mencegah kembalinya respons kosong (HTTP 500 blank) saat `display_errors = Off`.
+- **Ketahanan Controller REST API (`api-info/controllers/MediaController.php`)**:
+  - Melindungi proses registrasi metadata berkas (`media/upload`) serta unggahan berkas dengan blok `try...catch (\Throwable $e)` dan fallback eksekusi `ensureTableExists()`.
+- **Diagnostik Respons Klien API (`core/ApiClient.php`)**:
+  - Menangani kondisi ketika server API mengembalikan respons kosong atau bukan JSON valid, dengan menyertakan kode status HTTP (misal HTTP 500/404) dan pesan diagnosa yang jelas, mengeliminasi pesan ambigu `Format respons API tidak valid: `.
+- **Penyempurnaan Notifikasi Front-End (`app/controllers/admin/Media.php`)**:
+  - Mengklarifikasi pesan status saat berkas fisik telah sukses disimpan di `public/uploads` front-end.
+
+---
+
 ## [1.3.6] - 2026-10-02
 ### Standarisasi Unggah Berkas Fisik Eksklusif di Front-End (`public/uploads`) & Eliminasi Ketergantungan API Upload
 

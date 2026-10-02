@@ -31,11 +31,26 @@ class MediaController extends ApiController
                 'file_size'     => (int)$this->input('file_size', 0)
             ];
 
-            $id = $mediaModel->insert($data);
-            $data['id'] = (int)$id;
+            try {
+                $id = $mediaModel->insert($data);
+                $data['id'] = (int)$id;
 
-            ApiResponse::success($data, "Metadata media berhasil didaftarkan.", 201);
-            return;
+                ApiResponse::success($data, "Metadata media berhasil didaftarkan.", 201);
+                return;
+            } catch (\Throwable $e) {
+                // Buat tabel jika belum ada di database dan periksa kolom, lalu coba ulangi insert
+                $mediaModel->ensureTableExists();
+                try {
+                    $id = $mediaModel->insert($data);
+                    $data['id'] = (int)$id;
+
+                    ApiResponse::success($data, "Metadata media berhasil didaftarkan.", 201);
+                    return;
+                } catch (\Throwable $e2) {
+                    ApiResponse::error("Gagal mencatat media ke database API: " . $e2->getMessage(), 500);
+                    return;
+                }
+            }
         }
 
         // 2. Unggah berkas fisik jika dikirimkan via form multipart
@@ -134,17 +149,37 @@ class MediaController extends ApiController
                 'file_size'     => (int)$file['size']
             ];
 
-            $id = $mediaModel->insert([
-                'filename'      => $data['filename'],
-                'original_name' => $data['original_name'],
-                'file_path'     => $data['file_path'],
-                'mime_type'     => $data['mime_type'],
-                'file_size'     => $data['file_size']
-            ]);
-            $data['id'] = (int)$id;
+            try {
+                $id = $mediaModel->insert([
+                    'filename'      => $data['filename'],
+                    'original_name' => $data['original_name'],
+                    'file_path'     => $data['file_path'],
+                    'mime_type'     => $data['mime_type'],
+                    'file_size'     => $data['file_size']
+                ]);
+                $data['id'] = (int)$id;
 
-            ApiResponse::success($data, "Berkas berhasil diunggah.", 201);
-            return;
+                ApiResponse::success($data, "Berkas berhasil diunggah.", 201);
+                return;
+            } catch (\Throwable $e) {
+                $mediaModel->ensureTableExists();
+                try {
+                    $id = $mediaModel->insert([
+                        'filename'      => $data['filename'],
+                        'original_name' => $data['original_name'],
+                        'file_path'     => $data['file_path'],
+                        'mime_type'     => $data['mime_type'],
+                        'file_size'     => $data['file_size']
+                    ]);
+                    $data['id'] = (int)$id;
+
+                    ApiResponse::success($data, "Berkas berhasil diunggah.", 201);
+                    return;
+                } catch (\Throwable $e2) {
+                    ApiResponse::error("Gagal mencatat berkas ke database API: " . $e2->getMessage(), 500);
+                    return;
+                }
+            }
         }
 
         $lastError = error_get_last();
@@ -181,7 +216,11 @@ class MediaController extends ApiController
             }
         }
 
-        $mediaModel->delete($id);
-        ApiResponse::success(null, "File media berhasil dihapus.");
+        try {
+            $mediaModel->delete($id);
+            ApiResponse::success(null, "File media berhasil dihapus.");
+        } catch (\Throwable $e) {
+            ApiResponse::error("Gagal menghapus catatan media dari database API: " . $e->getMessage(), 500);
+        }
     }
 }

@@ -57,9 +57,9 @@ class MediaController extends Controller
             ]);
 
             if ($result !== null) {
-                flash('success', 'File media berhasil diunggah ke front-end!');
+                flash('success', 'File media berhasil diunggah!');
             } else {
-                flash('error', 'File tersimpan di front-end, namun gagal mencatat ke database API: ' . ($api->getLastError() ?: 'Kesalahan API.'));
+                flash('warning', 'Berkas fisik berhasil disimpan di front-end (public/uploads), namun sinkronisasi catatan ke database API mengalami kendala: ' . ($api->getLastError() ?: 'Kesalahan API.'));
             }
         }
 

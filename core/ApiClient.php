@@ -111,9 +111,15 @@ class ApiClient
             return null;
         }
 
+        if (trim((string)$response) === '') {
+            $this->lastError = "Server API mengembalikan status HTTP {$httpCode} tanpa data respons (periksa koneksi database atau error log PHP pada server API).";
+            return null;
+        }
+
         $decoded = json_decode($response, true);
         if (!is_array($decoded)) {
-            $this->lastError = 'Format respons API tidak valid: ' . substr(strip_tags($response), 0, 200);
+            $cleanSnippet = trim(substr(strip_tags($response), 0, 200));
+            $this->lastError = "Format respons API tidak valid (HTTP {$httpCode}): " . ($cleanSnippet !== '' ? $cleanSnippet : 'respons kosong');
             return null;
         }
 
@@ -148,9 +154,15 @@ class ApiClient
             return null;
         }
 
+        if (trim((string)$response) === '') {
+            $this->lastError = 'Server API mengembalikan respons kosong via stream context (periksa error log PHP server API).';
+            return null;
+        }
+
         $decoded = json_decode($response, true);
         if (!is_array($decoded)) {
-            $this->lastError = 'Format respons API tidak valid: ' . substr(strip_tags($response), 0, 200);
+            $cleanSnippet = trim(substr(strip_tags($response), 0, 200));
+            $this->lastError = 'Format respons API tidak valid: ' . ($cleanSnippet !== '' ? $cleanSnippet : 'respons kosong');
             return null;
         }
 
@@ -392,7 +404,18 @@ class ApiClient
             return null;
         }
 
+        if (trim((string)$response) === '') {
+            $this->lastError = "Server API mengembalikan status HTTP {$httpCode} tanpa data respons.";
+            return null;
+        }
+
         $decoded = json_decode($response, true);
+        if (!is_array($decoded)) {
+            $cleanSnippet = trim(substr(strip_tags($response), 0, 200));
+            $this->lastError = "Format respons upload API tidak valid (HTTP {$httpCode}): " . ($cleanSnippet !== '' ? $cleanSnippet : 'respons kosong');
+            return null;
+        }
+
         if ($httpCode >= 400 || ($decoded['status'] ?? '') === 'error') {
             $this->lastError = $decoded['message'] ?? 'Gagal mengunggah file ke API.';
             return null;
