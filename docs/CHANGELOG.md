@@ -19,27 +19,147 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
   - Mengeliminasi error *"Folder penyimpanan '/var/www/api/api-info/uploads' tidak memiliki izin tulis"* pada server API, karena REST API tidak lagi dipaksa menyimpan berkas fisik media.
 
 ---
-
 ## [1.3.5] - 2026-10-02
 ### Perbaikan Posisi Sidebar Pada Layar Lebar & Mode Landscape
 
 #### Diperbaiki & Dioptimalkan (Fixed & Enhanced)
 - **CSS Grid Responsif `.portal-layout` (`public/assets/css/core-ui.css`)**:
-  - Mengoreksi breakpoint responsif agar sidebar tetap berada di samping (*side-by-side*) pada layar laptop, desktop, dan mode landscape ponsel (`min-width: 560px`).
-  - Hanya beralih ke 1 kolom vertikal saat ponsel berada dalam posisi tegak (*portrait*).
-- **Cache-Busting & In-Head Style Guarantee (`app/views/layouts/frontend.php`)**:
-  - Menambahkan query parameter `?v=filemtime` dan menyisipkan CSS inline di `<head>` agar perubahan tata letak langsung aktif tanpa tertahan cache browser.
+  - Mengoreksi breakpoint responsif yang sebelumnya memicu *single-column collapse* terlalu cepat pada `@media (max-width: 960px)` (yang mencakup laptop berskala 125%/150%, tablet, dan orientasi landscape ponsel).
+  - Menetapkan tata letak berdampingan 2 kolom (*side-by-side*) yang kokoh:
+    - **Layar Komputer & Desktop (> 1024px)**: Kolom utama fleksibel + sidebar 340px, gap 2rem.
+    - **Layar Laptop / Tablet (769px - 1024px)**: Kolom utama fleksibel + sidebar 290px, gap 1.25rem.
+    - **Mode Landscape HP / Tablet (`@media (orientation: landscape) and (min-width: 560px)`)**: Sidebar tetap berada di samping dengan lebar 270px, gap 1rem.
+    - **Mode Vertikal/Portrait Ponsel Sempit (`@media (max-width: 720px) and (orientation: portrait), (max-width: 540px)`)**: Sidebar hanya bertumpuk ke bawah (*stacked*) jika pengguna memegang perangkat ponsel secara tegak.
+- **Cache-Busting & Jaminan Layout di Head Layout (`app/views/layouts/frontend.php`)**:
+  - Menambahkan query parameter versi otomatis berbasis waktu modifikasi berkas (`?v=filemtime`) pada tautan `core-ui.css` guna mengatasi *browser caching* yang agresif pada browser klien.
+  - Menyisipkan aturan gaya tata letak inline di dalam `<head>` layout frontend untuk menjamin rendering grid 2 kolom langsung aktif seketika tanpa tertunda cache berkas eksternal.
+- **Pencegahan Overflow Gambar (`public/assets/css/core-ui.css`)**:
+  - Menambahkan aturan reset global `img { max-width: 100%; height: auto; }` agar konten gambar tidak memicu pelebaran kontainer kolom grid secara berlebih.
 
 ---
 
 ## [1.3.4] - 2026-10-02
-### Penambahan Sidebar Portal Informasi Al-Munawwariyyah & Master Users
+### Penambahan Sidebar Portal Informasi & Tautan Lembaga (Model Al Munawwariyyah) & Master Users
 
 #### Ditambahkan (Added)
-- **Sidebar Portal Informasi (`app/views/partials/frontend_sidebar.php`)**:
-  - Memuat link PPDB, lembaga pendidikan (SMK, SMA, SMP, SD, MIM), channel media sosial, kategori artikel dinamis, berita terkini, dan counter pengunjung.
 - **Manajemen Pengguna (Master Users) & Level Editor**:
   - CRUD User Admin & Editor pada `app/controllers/admin/Users.php` dan `api-info/controllers/UserController.php`.
+- **Komponen Sidebar Portal Publik (`app/views/partials/frontend_sidebar.php`)**:
+  - Diadaptasi dari struktur portal informasi [info.almunawwariyyah.sch.id](https://info.almunawwariyyah.sch.id/).
+  - **Widget 1: Link & Lembaga Pendidikan**:
+    - **PPDB Online**: Tautan Info PPDB Utama & Portal Pendaftaran Online.
+    - **SMK Al Munawwariyyah**: Website resmi, channel YouTube (@smkalmunawwariyyah821), dan Instagram resmi (@smkalmunawwariyyah).
+    - **SMA Al Munawwariyyah**: Website/profil SMA, channel YouTube (@creativesmaalmunawwariyyah2093), Instagram (@smaalmunawwariyyah), TikTok (@smaalmunawwariyyah), Kliping Digital SMA, dan Portofolio Double Track SMA.
+    - **SMP Al Munawwariyyah**: Profil & Informasi SMP dan Instagram resmi (@smp_al_munawwariyyah).
+    - **SD & MIM**: Link informasi SD Al Munawwariyyah dan Madrasah Ibtidaiyah (MIM).
+  - **Widget 2: Kategori Topik Artikel**:
+    - Dinamis menampilkan kategori dari REST API beserta badge total artikel aktif.
+  - **Widget 3: Artikel & Berita Terkini**:
+    - Menampilkan 5 artikel teranyar lengkap dengan thumbnail pratinjau, judul, dan tanggal rilis.
+  - **Widget 4: Info Kampus & Visitor Counter**:
+    - Menampilkan alamat resmi kampus Pesantren (Raya Sudimoro 9 Bululawang, Malang) dan lencana penghitung pengunjung (*Visitor Counter*) interaktif.
+- **Desain CSS Grid & Responsif (`public/assets/css/core-ui.css`)**:
+  - Class tata letak `.portal-layout`, `.portal-main`, dan `.portal-sidebar`.
+  - Desain kartu widget (`.sidebar-widget`, `.sidebar-widget-header`, `.sidebar-group-title`).
+  - Badge pil media sosial (`.social-pill` untuk YouTube, Instagram, TikTok, Dokumen, dan Web).
+  - Responsif: Berjejer 2 kolom (konten + sidebar 350px) pada desktop, dan bertransformasi otomatis menjadi 1 kolom vertikal rapi pada perangkat tablet/ponsel (`@media max-width: 960px`).
+
+#### Diperbarui (Updated)
+- **Tampilan Beranda (`app/views/home/index.php`)**:
+  - Mengintegrasikan tata letak portal dengan grid 2 kolom untuk artikel bersanding dengan sidebar Al Munawwariyyah.
+- **Tampilan Baca Artikel (`app/views/post/read.php`)**:
+  - Menggantikan sidebar kategori lama dengan komponen `frontend_sidebar.php` yang kaya informasi dan seragam di seluruh portal.
+- **Controller Frontend (`app/controllers/Home.php` & `app/controllers/Post.php`)**:
+  - Menyediakan variabel `$recentPosts` ke view portal untuk mengisi widget artikel terkini pada sidebar.
+
+---
+
+## [1.3.3] - 2026-10-02
+### Prioritas Penyimpanan Langsung di Front-End (`public/uploads`) & Sinkronisasi Metadata API
+
+#### Diperbaiki & Ditingkatkan (Fixed & Enhanced)
+- **Penyimpanan Berkas Langsung di Front-End (`public/uploads/`)**:
+  - `app/controllers/admin/Settings.php`: Saat admin mengunggah berkas logo, controller memprioritaskan penyimpanan berkas secara langsung ke folder `public/uploads/` milik front-end web server lokal. Setelah tersimpan, path file (`uploads/logo-xxx.ext`) dikirimkan sebagai payload pembaruan ke REST API (`api-info`).
+  - `app/controllers/admin/Media.php`: Berkas media yang diunggah diprioritaskan disimpan langsung ke `public/uploads/` front-end, lalu metadata berkas didaftarkan ke REST API untuk dicatat pada tabel database `media`.
+  - Mengeliminasi ketergantungan pengiriman berkas binary via HTTP/cURL saat front-end dan media berada pada web server yang sama, sekaligus mencegah error gagal pemindahan berkas pada server API.
+- **Registrasi Metadata REST API (`api-info/controllers/MediaController.php`)**:
+  - Mendukung pendaftaran metadata media (`filename`, `original_name`, `file_path`, `mime_type`, `file_size`) secara langsung tanpa perlu mengunggah ulang fisik berkas jika front-end telah menyimpannya di `public/uploads/`.
+- **Method Klien Baru (`core/ApiClient.php`)**:
+  - Menambahkan method `registerMedia(array $data, ?string $token = null)` untuk mendaftarkan metadata berkas media ke backend REST API.
+
+---
+
+## [1.3.2] - 2026-10-02
+### Peningkatan Ketahanan Upload Media di Server Produksi Terisolasi & Validasi Permission
+
+#### Diperbaiki & Ditingkatkan (Fixed & Enhanced)
+- **Ketahanan Upload Direktori Mandiri (`api-info/controllers/MediaController.php`)**:
+  - Menyediakan direktori `api-info/uploads/` dengan `.gitignore` agar folder penyimpanan otomatis terbawa saat git clone / deploy ke server produksi terisolasi.
+  - Implementasi penentuan direktori bertingkat: Secara otomatis mendeteksi apakah berkas harus disimpan di `public/uploads` (arsitektur terpadu) atau `api-info/uploads` (arsitektur server API terisolasi).
+  - Validasi izin tulis (`is_writable`) sebelum proses unggah dijalankan. Jika permission server belum diatur, sistem memberikan pesan diagnostik yang informatif beserta instruksi perintah terminal Linux (`chmod` & `chown`) yang tepat.
+  - Penanganan error kode PHP upload (`UPLOAD_ERR_*`) secara komprehensif untuk mendeteksi `upload_max_filesize`, folder sementara (`upload_tmp_dir`), atau pembatasan kuota disk server.
+  - Menghasilkan atribut `file_url` lengkap (URL absolut) agar klien di domain/server terpisah dapat langsung menampilkan gambar tanpa terputus.
+  - Mengatur permission berkas yang baru diunggah (`chmod 0664`) agar dapat dibaca (*readable*) oleh web server secara publik.
+  - Menambahkan definisi tabel `media` pada `api-info/database/schema.sql` untuk instalasi mandiri server produksi.
+
+---
+
+## [1.3.1] - 2026-10-02
+### Fitur Penggantian Logo pada Pengaturan Situs Web (Khusus Administrator)
+
+#### Ditambahkan (Added)
+- **Modul Penggantian Logo di Pengaturan Situs (`/admin/settings`)**:
+  - Dukungan unggah berkas logo baru secara langsung via input file (`.png`, `.jpg`, `.jpeg`, `.svg`, `.webp`).
+  - Unggahan berkas logo diteruskan secara headless ke endpoint API Media (`/media/upload`) via `ApiClient::uploadMedia()`, dan path file otomatis disimpan ke pengaturan `site_logo`.
+  - Dukungan input URL / path kustom untuk fleksibilitas referensi logo eksternal atau galeri media yang sudah ada.
+  - Fitur **Pratinjau Langsung (Live Preview)**: Pengguna dapat langsung melihat preview logo sebelum formulir disimpan menggunakan JavaScript FileReader.
+  - Opsi reset/hapus logo kustom (`remove_logo`) untuk mengembalikan logo ke SVG standar sistem kapan saja.
+  - Indikator status logo aktif: Menampilkan status apakah situs sedang menggunakan "Logo Kustom Aktif" atau "Logo Standar (SVG Default)".
+- **Fungsi Helper Global**:
+  - `site_logo_url(?string $customLogo = null, bool $forDark = false): string`: Helper cerdas untuk menyelesaikan URL absolut logo brand, mendukung path relatif `uploads/`, path aset lokal, URL CDN eksternal, dan fallback otomatis ke SVG default sistem.
+  - `get_site_setting(string $key, $default = '', bool $fresh = false)`: Helper untuk mengambil konfigurasi situs secara efisien dengan in-memory static cache.
+
+#### Diperbarui (Updated)
+- **Pengendali Admin Settings (`app/controllers/admin/Settings.php`)**:
+  - Menambahkan penanganan key `site_logo` pada daftar allowed keys.
+  - Memproses unggahan berkas logo (`logo_file`) melalui REST API.
+  - Memproses aksi pembersihan/reset logo kembali ke bawaan.
+- **Tampilan Antarmuka (Views & Layouts)**:
+  - `app/views/admin/settings/index.php`: Antarmuka formulir diperluas dengan kartu pengelolaan logo, badge hak akses Administrator, dan script live preview.
+  - `app/views/layouts/frontend.php`: Menggunakan `site_logo_url($siteLogo ?? null)` sehingga perubahan logo di admin langsung tercermin di header portal publik.
+  - `app/views/layouts/admin.php`: Menggunakan `site_logo_url(null, true)` agar sidebar admin juga menggunakan logo kustom jika diatur.
+  - `app/views/auth/login.php`: Menggunakan `site_logo_url()` untuk menampilkan logo kustom pada kartu login.
+  - `app/controllers/Post.php`: Mengirimkan variabel `siteLogo` ke view publik (read artikel & filter kategori).
+- **Proteksi Otorisasi (RBAC)**:
+  - Modul pengaturan situs dan perubahan logo tetap diproteksi ketat hanya untuk user dengan peran Administrator (`requireAdmin()`).
+  - Editor artikel diblokir dari mengakses atau mengubah pengaturan (HTTP 403 Forbidden).
+
+---
+
+## [1.3.0] - 2026-10-02
+### Integrasi Logo Resmi Brand & Master Pengguna dengan Peran Editor (RBAC)
+
+#### Ditambahkan (Added)
+- **Aset Logo Vektor SVG**:
+  - `public/assets/images/logo.svg`: Logo utama berwarna modern dengan perpaduan gradien indigo-cyan dan aksen rose-orange untuk tema terang.
+  - `public/assets/images/logo-light.svg`: Varian logo terang khusus untuk latar belakang gelap (sidebar admin panel).
+  - `public/assets/images/logo-icon.svg`: Favicon dan icon mark kompak mandiri (*standalone vector*).
+- **Master Pengguna (Users Management)**:
+  - `api-info/controllers/UserController.php`: Endpoint REST API (`/users`) untuk operasi CRUD pengguna (Daftar, Detail, Tambah, Edit, Hapus).
+  - `app/controllers/admin/Users.php`: Controller admin panel untuk manajemen pengguna dengan proteksi otorisasi khusus Administrator.
+  - `app/views/admin/users/index.php`, `create.php`, `edit.php`: Tampilan antarmuka master pengguna dengan tabel, badge level peran, form tambah & edit, dan petunjuk hak akses.
+  - `core/ApiClient.php`: Method baru `getUsers()`, `getUser()`, `createUser()`, `updateUser()`, `deleteUser()`.
+
+#### Diubah & Ditingkatkan (Changed & Enhanced)
+- **Role-Based Access Control (RBAC) & Peran Editor**:
+  - **Administrator (`admin`)**: Memiliki akses penuh ke seluruh modul sistem (Master Users, Pengaturan Situs, Artikel, Kategori, Media).
+  - **Editor Artikel (`editor`)**: Khusus memproduksi dan mengurasi konten (Artikel, Kategori, Media). Menu Master Users dan Pengaturan Situs otomatis disembunyikan dari sidebar, dan akses rute URL langsung dicegah dengan proteksi 403 Forbidden.
+  - Proteksi akun mandiri: Administrator dicegah menghapus akun miliknya sendiri saat sedang aktif login.
+- **Tampilan Antarmuka (Layouts)**:
+  - `app/views/layouts/frontend.php`: Menyematkan logo resmi brand dan favicon pada header navigasi portal publik.
+  - `app/views/layouts/admin.php`: Menyematkan logo terang pada sidebar brand, favicon, menu "Master Pengguna" khusus admin, dan badge peran dinamis (`⚡ Administrator` atau `✍️ Editor`) pada topbar profil.
+  - `app/views/auth/login.php`: Menampilkan logo brand dan petunjuk kredensial akun bawaan untuk Administrator dan Editor.
+  - `api-info/controllers/SettingController.php`: Menambahkan dukungan pengaturan `site_logo` dan proteksi `requireAdmin()`.
 
 ---
 
