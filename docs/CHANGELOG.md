@@ -4,6 +4,36 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.3.3] - 2026-10-02
+### Prioritas Penyimpanan Langsung di Front-End (`public/uploads`) & Sinkronisasi Metadata API
+
+#### Diperbaiki & Ditingkatkan (Fixed & Enhanced)
+- **Penyimpanan Berkas Langsung di Front-End (`public/uploads/`)**:
+  - `app/controllers/admin/Settings.php`: Saat admin mengunggah berkas logo, controller memprioritaskan penyimpanan berkas secara langsung ke folder `public/uploads/` milik front-end web server lokal. Setelah tersimpan, path file (`uploads/logo-xxx.ext`) dikirimkan sebagai payload pembaruan ke REST API (`api-info`).
+  - `app/controllers/admin/Media.php`: Berkas media yang diunggah diprioritaskan disimpan langsung ke `public/uploads/` front-end, lalu metadata berkas didaftarkan ke REST API untuk dicatat pada tabel database `media`.
+  - Mengeliminasi ketergantungan pengiriman berkas binary via HTTP/cURL saat front-end dan media berada pada web server yang sama, sekaligus mencegah error gagal pemindahan berkas pada server API.
+- **Registrasi Metadata REST API (`api-info/controllers/MediaController.php`)**:
+  - Mendukung pendaftaran metadata media (`filename`, `original_name`, `file_path`, `mime_type`, `file_size`) secara langsung tanpa perlu mengunggah ulang fisik berkas jika front-end telah menyimpannya di `public/uploads/`.
+- **Method Klien Baru (`core/ApiClient.php`)**:
+  - Menambahkan method `registerMedia(array $data, ?string $token = null)` untuk mendaftarkan metadata berkas media ke backend REST API.
+
+---
+
+## [1.3.2] - 2026-10-02
+### Peningkatan Ketahanan Upload Media di Server Produksi Terisolasi & Validasi Permission
+
+#### Diperbaiki & Ditingkatkan (Fixed & Enhanced)
+- **Ketahanan Upload Direktori Mandiri (`api-info/controllers/MediaController.php`)**:
+  - Menyediakan direktori `api-info/uploads/` dengan `.gitignore` agar folder penyimpanan otomatis terbawa saat git clone / deploy ke server produksi terisolasi.
+  - Implementasi penentuan direktori bertingkat: Secara otomatis mendeteksi apakah berkas harus disimpan di `public/uploads` (arsitektur terpadu) atau `api-info/uploads` (arsitektur server API terisolasi).
+  - Validasi izin tulis (`is_writable`) sebelum proses unggah dijalankan. Jika permission server belum diatur, sistem memberikan pesan diagnostik yang informatif beserta instruksi perintah terminal Linux (`chmod` & `chown`) yang tepat.
+  - Penanganan error kode PHP upload (`UPLOAD_ERR_*`) secara komprehensif untuk mendeteksi `upload_max_filesize`, folder sementara (`upload_tmp_dir`), atau pembatasan kuota disk server.
+  - Menghasilkan atribut `file_url` lengkap (URL absolut) agar klien di domain/server terpisah dapat langsung menampilkan gambar tanpa terputus.
+  - Mengatur permission berkas yang baru diunggah (`chmod 0664`) agar dapat dibaca (*readable*) oleh web server secara publik.
+  - Menambahkan definisi tabel `media` pada `api-info/database/schema.sql` untuk instalasi mandiri server produksi.
+
+---
+
 ## [1.3.1] - 2026-10-02
 ### Fitur Penggantian Logo pada Pengaturan Situs Web (Khusus Administrator)
 

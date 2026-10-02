@@ -401,6 +401,15 @@ class ApiClient
         return $decoded['data'] ?? null;
     }
 
+    public function registerMedia(array $data, ?string $token = null): ?array
+    {
+        $resp = $this->request('POST', 'media/upload', $data, $token);
+        if ($resp && ($resp['status'] ?? '') === 'success') {
+            return $resp['data'] ?? [];
+        }
+        return null;
+    }
+
     public function deleteMedia(int $id, ?string $token = null): bool
     {
         $resp = $this->request('DELETE', 'media/delete/' . $id, [], $token);
