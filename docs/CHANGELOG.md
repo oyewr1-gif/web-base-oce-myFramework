@@ -4,6 +4,29 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.1.0] - 2026-10-02
+### Pemisahan Akses Front-End ke REST API & Portabilitas Server API Terisolasi
+
+#### Ditambahkan (Added)
+- `core/ApiClient.php`: HTTP Client mandiri (*zero-dependency*) untuk portal front-end mengonsumsi seluruh data artikel, kategori, dan pengaturan dari REST API (`api-info`).
+- `api-info/database/`: Paket mandiri skema (`schema.sql`), data seeder (`seeder.sql`), dan installer otomatis (`install.php`) khusus aplikasi REST API.
+- `api-info/README.md`: Panduan teknis lengkap cara mengekstrak dan menjalankan aplikasi `api-info/` di server produksi terisolasi (Nginx/Apache/Docker) dengan subdomain terpisah (contoh: `api.domain.com`).
+- Konfigurasi `API_BASE_URL` pada `.env` dan `.env.example` untuk memudahkan perpindahan endpoint server API.
+
+#### Diubah (Changed)
+- `app/controllers/Home.php` & `app/controllers/Post.php`: Seluruh akses langsung ke layer Model database dihilangkan dan diganti 100% menggunakan `ApiClient` ke REST API.
+- `app/views/home/index.php`: Menghilangkan tombol "Buka Admin Panel" dan link "Cek REST API" pada hero section portal pengunjung.
+- `app/views/layouts/frontend.php`: Menghapus link teknis REST API dari navigasi publik agar tampilan portal lebih bersih.
+- `app/views/admin/dashboard/index.php` & `app/views/layouts/admin.php`: Menambahkan tombol dan menu "Cek REST API" ke Admin Dashboard dan sidebar sistem.
+- `api-info/models/ApiPost.php`: Menambahkan filter kategori dinamis pada method `allPublished()` dan penghitungan views otomatis pada `findDetail()`.
+- `api-info/controllers/PostController.php`: Mendukung query parameter `?category=slug_or_id`.
+- `api-info/controllers/CategoryController.php`: Mendukung pencarian detail kategori berdasarkan slug URL.
+
+#### Diperbaiki (Fixed)
+- `api-info/core/ApiModel.php`: Menambahkan method `execute()` untuk menjalankan query pembaruan non-SELECT (UPDATE/DELETE).
+
+---
+
 ## [1.0.3] - 2026-10-01
 ### Perbaikan Konflik Nama Class Controller vs Model (Artikel & Media Manager)
 

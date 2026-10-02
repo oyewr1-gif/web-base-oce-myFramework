@@ -2,6 +2,7 @@
 /**
  * Controller Post (Publik)
  * Menampilkan detail artikel dan filter per kategori
+ * Murni mengonsumsi data dari REST API (api-info) tanpa akses langsung ke Database
  */
 class PostController extends Controller
 {
@@ -12,22 +13,16 @@ class PostController extends Controller
             return;
         }
 
-        $postModel = $this->model('Post');
-        $settingModel = $this->model('Setting');
-        $catModel = $this->model('Category');
+        $api = new ApiClient();
+        $post = $api->getPost($slug);
 
-        $post = $postModel->findBySlugWithRelations($slug);
-
-        if (!$post || $post['status'] !== 'published') {
+        if (!$post || ($post['status'] ?? '') !== 'published') {
             Response::notFound("Artikel tidak ditemukan atau belum dipublikasikan.");
             return;
         }
 
-        // Naikkan hit counter
-        $postModel->incrementViews((int)$post['id']);
-
-        $settings = $settingModel->allAsKeyVal();
-        $categories = $catModel->allWithCount();
+        $categories = $api->getCategories();
+        $settings   = $api->getSettings();
 
         $this->view('post/read', [
             'pageTitle'   => $post['title'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
@@ -45,27 +40,26 @@ class PostController extends Controller
             return;
         }
 
-        $catModel = $this->model('Category');
-        $postModel = $this->model('Post');
-        $settingModel = $this->model('Setting');
+        $api = new ApiClient();
+        $category = $api->getCategory($slug);
 
-        $category = $catModel->findBySlug($slug);
         if (!$category) {
             Response::notFound("Kategori tidak ditemukan.");
             return;
         }
 
-        $posts = $postModel->getByCategory((int)$category['id']);
-        $categories = $catModel->allWithCount();
-        $settings = $settingModel->allAsKeyVal();
+        $postsResult = $api->getPosts(12, 1, $slug);
+        $posts       = $postsResult['data'] ?? [];
+        $categories  = $api->getCategories();
+        $settings    = $api->getSettings();
 
         $this->view('home/index', [
-            'pageTitle'   => 'Kategori: ' . $category['name'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
-            'siteTitle'   => $settings['site_title'] ?? 'CMS',
-            'siteTagline' => 'Artikel dalam kategori: ' . $category['name'],
-            'footerText'  => $settings['footer_text'] ?? '© 2026 CMS Framework.',
-            'posts'       => $posts,
-            'categories'  => $categories,
+            'pageTitle'      => 'Kategori: ' . $category['name'] . ' - ' . ($settings['site_title'] ?? 'CMS'),
+            'siteTitle'      => $settings['site_title'] ?? 'CMS',
+            'siteTagline'    => 'Artikel dalam kategori: ' . $category['name'],
+            'footerText'     => $settings['footer_text'] ?? '© 2026 CMS Framework.',
+            'posts'          => $posts,
+            'categories'     => $categories,
             'activeCategory' => $category
         ], 'layouts/frontend');
     }

@@ -44,6 +44,7 @@
             <a href="<?= base_url('admin/posts/create') ?>" class="btn btn-primary">+ Tulis Artikel Baru</a>
             <a href="<?= base_url('admin/categories') ?>" class="btn btn-secondary">+ Tambah Kategori</a>
             <a href="<?= base_url('admin/media') ?>" class="btn btn-secondary">Upload File Media</a>
+            <a href="<?= base_url('api-info') ?>" target="_blank" class="btn btn-outline" style="border-color: #a5b4fc; color: #4338ca;">🚀 Cek REST API &nearr;</a>
         </div>
     </div>
 </div>

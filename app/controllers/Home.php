@@ -2,18 +2,18 @@
 /**
  * Controller Home
  * Halaman utama portal publik CMS
+ * Murni mengonsumsi data dari REST API (api-info) tanpa akses langsung ke Database
  */
 class HomeController extends Controller
 {
     public function index(): void
     {
-        $postModel = $this->model('Post');
-        $catModel = $this->model('Category');
-        $settingModel = $this->model('Setting');
+        $api = new ApiClient();
 
-        $posts = $postModel->allWithRelations('published', 9);
-        $categories = $catModel->allWithCount();
-        $settings = $settingModel->allAsKeyVal();
+        $postsResult = $api->getPosts(9, 1);
+        $posts       = $postsResult['data'] ?? [];
+        $categories  = $api->getCategories();
+        $settings    = $api->getSettings();
 
         $this->view('home/index', [
             'pageTitle'   => ($settings['site_title'] ?? 'Modern PHP MVC CMS') . ' - Beranda',

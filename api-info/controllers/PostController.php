@@ -9,16 +9,18 @@ class PostController extends ApiController
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $page  = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
+        $category = $_GET['category'] ?? ($_GET['category_slug'] ?? ($_GET['category_id'] ?? null));
 
         $postModel = new ApiPost();
-        $posts = $postModel->allPublished($limit, $offset);
-        $total = $postModel->where("status = 'published'");
+        $posts = $postModel->allPublished($limit, $offset, $category);
+        $totalItems = $postModel->countPublished($category);
 
         ApiResponse::success($posts, 'Daftar artikel berhasil diambil.', 200, [
             'page'        => $page,
             'limit'       => $limit,
-            'total_items' => count($total),
-            'total_pages' => ceil(count($total) / max(1, $limit))
+            'category'    => $category,
+            'total_items' => $totalItems,
+            'total_pages' => ceil($totalItems / max(1, $limit))
         ]);
     }
 

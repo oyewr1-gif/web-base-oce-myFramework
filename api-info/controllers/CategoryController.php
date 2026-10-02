@@ -12,11 +12,14 @@ class CategoryController extends ApiController
         ApiResponse::success($categories, "Daftar kategori berhasil diambil.");
     }
 
-    public function read($id = ''): void
+    public function read($idOrSlug = ''): void
     {
-        $id = (int)$id;
         $catModel = new ApiCategory();
-        $category = $catModel->find($id);
+        if (is_numeric($idOrSlug)) {
+            $category = $catModel->find((int)$idOrSlug);
+        } else {
+            $category = $catModel->firstWhere("slug = :slug", ['slug' => $idOrSlug]);
+        }
 
         if (!$category) {
             ApiResponse::error("Kategori tidak ditemukan.", 404);

@@ -46,6 +46,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="<?= base_url('api-info') ?>" target="_blank">
+                        <span>🚀 Cek REST API &nearr;</span>
+                    </a>
+                </li>
+                <li>
                     <a href="<?= base_url() ?>" target="_blank">
                         <span>🌐 Lihat Website &nearr;</span>
                     </a>

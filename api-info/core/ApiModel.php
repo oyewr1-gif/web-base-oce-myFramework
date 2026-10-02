@@ -99,4 +99,11 @@ class ApiModel
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
+
+    public function execute(string $sql, array $params = []): int
+    {
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
 }

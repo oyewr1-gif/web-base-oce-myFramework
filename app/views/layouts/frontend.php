@@ -16,7 +16,6 @@
                 </a>
                 <ul class="site-links">
                     <li><a href="<?= base_url() ?>">Beranda</a></li>
-                    <li><a href="<?= base_url('api-info') ?>" target="_blank" class="badge badge-info">REST API</a></li>
                     <?php if (is_logged_in()): ?>
                         <li><a href="<?= base_url('admin/dashboard') ?>" class="btn btn-sm btn-primary">Dashboard Admin</a></li>
                     <?php else: ?>
