@@ -5,7 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle ?? 'Modern PHP MVC CMS') ?></title>
     <link rel="icon" type="image/svg+xml" href="<?= asset('images/logo-icon.svg') ?>">
-    <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/core-ui.css') ?>?v=<?= file_exists(ROOT_PATH . '/public/assets/css/core-ui.css') ? filemtime(ROOT_PATH . '/public/assets/css/core-ui.css') : time() ?>">
+    <style>
+        /* Jaminan tata letak 2 kolom di layar lebar dan landscape */
+        .portal-layout {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 2rem;
+            align-items: start;
+        }
+        .portal-main { min-width: 0; width: 100%; }
+        .portal-sidebar { min-width: 0; width: 100%; }
+
+        @media (max-width: 1024px) {
+            .portal-layout {
+                grid-template-columns: minmax(0, 1fr) 290px;
+                gap: 1.25rem;
+            }
+        }
+
+        /* Saat orientasi landscape pada layar horizontal (tablet / HP lebar), sidebar tetap di samping */
+        @media (orientation: landscape) and (min-width: 560px) {
+            .portal-layout {
+                grid-template-columns: minmax(0, 1fr) 270px;
+                gap: 1rem;
+            }
+        }
+
+        /* Hanya bertumpuk ke bawah pada HP mode portrait atau layar sangat sempit */
+        @media (max-width: 720px) and (orientation: portrait), (max-width: 540px) {
+            .portal-layout {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header Publik -->
