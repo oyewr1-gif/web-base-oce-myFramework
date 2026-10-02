@@ -38,13 +38,38 @@ class SettingsController extends Controller
             // Opsi 2: Unggah berkas logo baru jika pengguna memilih file
             $logoFile = $this->request->file('logo_file');
             if ($logoFile && !empty($logoFile['name']) && ($logoFile['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK) {
-                $uploadResult = $api->uploadMedia($logoFile);
-                if ($uploadResult && !empty($uploadResult['file_path'])) {
-                    $postData['site_logo'] = $uploadResult['file_path'];
-                } else {
-                    flash('error', 'Gagal mengunggah logo: ' . ($api->getLastError() ?: 'Format atau ukuran file tidak didukung.'));
-                    $this->redirect('admin/settings');
-                    return;
+                // PRIORITAS 1: Simpan langsung ke front-end public/uploads jika folder lokal tersedia & writable
+                $localUploadDir = defined('ROOT_PATH') ? ROOT_PATH . '/public/uploads/' : (APP_PATH . '/../public/uploads/');
+                if (!is_dir($localUploadDir)) {
+                    @mkdir($localUploadDir, 0775, true);
+                }
+
+                $savedLocally = false;
+                if (is_dir($localUploadDir) && is_writable($localUploadDir)) {
+                    $ext = strtolower(pathinfo($logoFile['name'], PATHINFO_EXTENSION));
+                    $safeBase = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', pathinfo($logoFile['name'], PATHINFO_FILENAME)));
+                    $safeBase = trim($safeBase, '-') ?: 'logo';
+                    $newFilename = $safeBase . '-' . time() . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
+                    $targetPath = $localUploadDir . $newFilename;
+
+                    if (move_uploaded_file($logoFile['tmp_name'], $targetPath)) {
+                        @chmod($targetPath, 0664);
+                        $postData['site_logo'] = 'uploads/' . $newFilename;
+                        $savedLocally = true;
+                    }
+                }
+
+                // PRIORITAS 2: Jika penyimpanan lokal gagal atau terpisah, teruskan via API
+                if (!$savedLocally) {
+                    $uploadResult = $api->uploadMedia($logoFile);
+                    $logoPath = !empty($uploadResult['file_url']) ? $uploadResult['file_url'] : ($uploadResult['file_path'] ?? '');
+                    if (!empty($logoPath)) {
+                        $postData['site_logo'] = $logoPath;
+                    } else {
+                        flash('error', 'Gagal mengunggah logo: ' . ($api->getLastError() ?: 'Format atau ukuran file tidak didukung.'));
+                        $this->redirect('admin/settings');
+                        return;
+                    }
                 }
             }
 

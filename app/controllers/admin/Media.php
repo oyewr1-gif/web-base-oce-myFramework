@@ -39,7 +39,40 @@ class MediaController extends Controller
             }
 
             $api = new ApiClient();
-            $result = $api->uploadMedia($file);
+            
+            // PRIORITAS 1: Simpan langsung ke front-end public/uploads jika folder lokal tersedia & writable
+            $localUploadDir = defined('ROOT_PATH') ? ROOT_PATH . '/public/uploads/' : (APP_PATH . '/../public/uploads/');
+            if (!is_dir($localUploadDir)) {
+                @mkdir($localUploadDir, 0775, true);
+            }
+
+            $savedLocally = false;
+            $result = null;
+
+            if (is_dir($localUploadDir) && is_writable($localUploadDir)) {
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $safeBase = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', pathinfo($file['name'], PATHINFO_FILENAME)));
+                $safeBase = trim($safeBase, '-') ?: 'media';
+                $newFilename = $safeBase . '-' . time() . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
+                $targetPath = $localUploadDir . $newFilename;
+
+                if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                    @chmod($targetPath, 0664);
+                    $result = $api->registerMedia([
+                        'filename'      => $newFilename,
+                        'original_name' => $file['name'],
+                        'file_path'     => 'uploads/' . $newFilename,
+                        'mime_type'     => $file['type'] ?? 'application/octet-stream',
+                        'file_size'     => (int)$file['size']
+                    ]);
+                    $savedLocally = ($result !== null);
+                }
+            }
+
+            // PRIORITAS 2: Jika penyimpanan lokal gagal atau terpisah, teruskan via cURL ke API
+            if (!$savedLocally) {
+                $result = $api->uploadMedia($file);
+            }
 
             if ($result) {
                 flash('success', 'File berhasil diunggah!');
