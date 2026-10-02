@@ -75,4 +75,39 @@ class ApiPost extends ApiModel
 
         return $results ? $results[0] : null;
     }
+
+    public function allWithRelations(?string $status = null, ?int $limit = null, int $offset = 0): array
+    {
+        $sql = "SELECT p.*, u.name as author_name, c.name as category_name, c.slug as category_slug
+                FROM {$this->table} p
+                LEFT JOIN users u ON u.id = p.user_id
+                LEFT JOIN categories c ON c.id = p.category_id";
+        
+        $params = [];
+        if ($status !== null && $status !== '') {
+            $sql .= " WHERE p.status = :status";
+            $params['status'] = $status;
+        }
+
+        $sql .= " ORDER BY p.id DESC";
+
+        if ($limit !== null) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
+        return $this->query($sql, $params);
+    }
+
+    public function countAll(?string $status = null): int
+    {
+        $sql = "SELECT COUNT(id) as total FROM {$this->table}";
+        $params = [];
+        if ($status !== null && $status !== '') {
+            $sql .= " WHERE status = :status";
+            $params['status'] = $status;
+        }
+
+        $res = $this->query($sql, $params);
+        return (int)($res[0]['total'] ?? 0);
+    }
 }

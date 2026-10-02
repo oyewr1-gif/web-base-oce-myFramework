@@ -50,4 +50,21 @@ class AuthController extends ApiController
             'token_name' => $user['name']
         ], 'Data profil pengguna terautentikasi.');
     }
+
+    public function logout(): void
+    {
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $authHeader = $headers['Authorization'] ?? ($headers['authorization'] ?? ($_SERVER['HTTP_AUTHORIZATION'] ?? ''));
+        $token = '';
+        if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+
+        if (!empty($token)) {
+            $userModel = new ApiUser();
+            $userModel->execute("DELETE FROM api_tokens WHERE token = :t", ['t' => $token]);
+        }
+
+        ApiResponse::success(null, "Logout berhasil. Token telah dicabut.");
+    }
 }

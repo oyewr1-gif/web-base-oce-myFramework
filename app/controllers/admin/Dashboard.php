@@ -1,6 +1,7 @@
 <?php
 /**
- * Controller Admin Dashboard
+ * Controller Admin Dashboard (Headless REST API Client)
+ * Mengambil ringkasan metrik dan artikel terbaru via REST API
  */
 class DashboardController extends Controller
 {
@@ -12,20 +13,18 @@ class DashboardController extends Controller
 
     public function index(): void
     {
-        $postModel = $this->model('Post');
-        $catModel = $this->model('Category');
-        $mediaModel = $this->model('Media');
-        $userModel = $this->model('User');
+        $api = new ApiClient();
+        $dashboardData = $api->getDashboardStats();
 
-        $stats = [
-            'total_posts'      => $postModel->count(),
-            'published_posts'  => $postModel->count("status = 'published'"),
-            'total_categories' => $catModel->count(),
-            'total_media'      => $mediaModel->count(),
-            'total_users'      => $userModel->count(),
+        $stats = $dashboardData['stats'] ?? [
+            'total_posts'      => 0,
+            'published_posts'  => 0,
+            'total_categories' => 0,
+            'total_media'      => 0,
+            'total_users'      => 0
         ];
 
-        $recentPosts = $postModel->allWithRelations(null, 5);
+        $recentPosts = $dashboardData['recent_posts'] ?? [];
 
         $this->view('admin/dashboard/index', [
             'pageTitle'   => 'Ringkasan Dashboard',

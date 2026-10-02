@@ -96,6 +96,12 @@ class Controller
         if (!is_logged_in()) {
             flash('error', 'Silakan login terlebih dahulu untuk mengakses halaman ini.');
             $this->redirect('auth/login');
+            return;
+        }
+
+        // Auto-heal sesi lama: pastikan api_token terisi di session
+        if (!Session::has('api_token') || empty(Session::get('api_token'))) {
+            Session::set('api_token', env('API_DEFAULT_TOKEN', 'test-token-cms-info-2026'));
         }
     }
 

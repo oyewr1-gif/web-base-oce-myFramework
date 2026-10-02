@@ -18,4 +18,32 @@ class SettingController extends ApiController
 
         ApiResponse::success($publicSettings, "Pengaturan situs berhasil diambil.");
     }
+
+    public function all(): void
+    {
+        $this->requireAuth();
+        $settingModel = new ApiSetting();
+        $settings = $settingModel->allAsKeyVal();
+
+        ApiResponse::success($settings, "Semua pengaturan situs berhasil diambil.");
+    }
+
+    public function update(): void
+    {
+        $this->requireAuth();
+
+        $settingModel = new ApiSetting();
+        $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'footer_text'];
+        
+        $updated = [];
+        foreach ($allowedKeys as $key) {
+            $val = $this->input($key);
+            if ($val !== null) {
+                $settingModel->set($key, trim((string)$val));
+                $updated[$key] = trim((string)$val);
+            }
+        }
+
+        ApiResponse::success($updated, "Pengaturan situs berhasil diperbarui.");
+    }
 }

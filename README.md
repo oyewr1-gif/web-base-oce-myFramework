@@ -5,6 +5,7 @@ Framework CMS modern, ringan, dan mandiri yang dibangun murni menggunakan **PHP 
 ---
 
 ## 📑 Daftar Isi
+- [Arsitektur Sistem (Headless CMS)](#-arsitektur-sistem-headless-cms)
 - [Fitur Utama](#-fitur-utama)
 - [Struktur Direktori](#-struktur-direktori)
 - [Dokumentasi Lengkap (Folder docs/)](#-dokumentasi-lengkap-folder-docs)
@@ -15,6 +16,35 @@ Framework CMS modern, ringan, dan mandiri yang dibangun murni menggunakan **PHP 
 - [Panduan Pengembangan (MVC)](#-panduan-pengembangan-mvc)
 - [Custom CSS Library (CoreUI)](#-custom-css-library-coreui)
 - [Dokumentasi Standalone REST API (api-info)](#-dokumentasi-standalone-rest-api-api-info)
+
+---
+
+## 🏗️ Arsitektur Sistem (Headless CMS)
+
+Aplikasi CMS Web mengadopsi arsitektur **Headless Client** (Decoupled Architecture). Seluruh aplikasi web utama (baik portal pengunjung publik, autentikasi login, maupun panel admin) beroperasi 100% sebagai REST API Client via `core/ApiClient.php` tanpa akses query database langsung. Satu-satunya service yang terhubung ke server MySQL adalah aplikasi REST API (`api-info/`).
+
+```mermaid
+flowchart TD
+    subgraph Frontend["CMS Web Application (Zero Database Access)"]
+        A["Pengunjung (Portal Berita)"] -->|HTTP Request| AC["core/ApiClient.php"]
+        B["Halaman Login (/auth/login)"] -->|POST /auth/login| AC
+        C["Admin Dashboard (/admin/*)"] -->|Bearer Token API| AC
+    end
+
+    subgraph BackendAPI["Standalone REST API Engine (api-info/)"]
+        AC -->|JSON API Requests| R["api-info/core/ApiRouter.php"]
+        R --> C1["AuthController"]
+        R --> C2["DashboardController"]
+        R --> C3["PostController"]
+        R --> C4["CategoryController"]
+        R --> C5["MediaController"]
+        R --> C6["SettingController"]
+    end
+
+    subgraph Storage["Database Server"]
+        BackendAPI -->|PDO Connection (api-info/core/ApiDatabase.php)| DB[("MySQL / MariaDB Database")]
+    end
+```
 
 ---
 

@@ -28,7 +28,13 @@ class ApiDatabase
                     PDO::ATTR_EMULATE_PREPARES   => false,
                 ]);
             } catch (PDOException $e) {
-                ApiResponse::error("Koneksi Database API Gagal: " . $e->getMessage(), 500);
+                $isPlaceholder = in_array($username, ['your_db_username', 'root_placeholder']) 
+                              || in_array($password, ['your_db_password']);
+                if ($isPlaceholder) {
+                    ApiResponse::error("Koneksi Database API Gagal: File .env masih menggunakan kredensial template '{$username}'. Silakan atur DB_USERNAME dan DB_PASSWORD di berkas .env server Anda.", 500);
+                } else {
+                    ApiResponse::error("Koneksi Database API Gagal: " . $e->getMessage(), 500);
+                }
             }
         }
 

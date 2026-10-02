@@ -1,7 +1,7 @@
 <?php
 /**
- * Controller Admin Categories
- * Mengelola kategori konten artikel
+ * Controller Admin Categories (Headless REST API Client)
+ * Mengelola kategori konten artikel via REST API
  */
 class CategoriesController extends Controller
 {
@@ -13,8 +13,8 @@ class CategoriesController extends Controller
 
     public function index(): void
     {
-        $catModel = $this->model('Category');
-        $categories = $catModel->allWithCount();
+        $api = new ApiClient();
+        $categories = $api->getCategories();
 
         $this->view('admin/categories/index', [
             'pageTitle'  => 'Manajemen Kategori',
@@ -41,20 +41,18 @@ class CategoriesController extends Controller
                 return;
             }
 
-            $slug = empty($slug) ? slugify($name) : slugify($slug);
-
-            $catModel = $this->model('Category');
-            if ($catModel->findBySlug($slug)) {
-                $slug = $slug . '-' . time();
-            }
-
-            $catModel->insert([
+            $api = new ApiClient();
+            $result = $api->createCategory([
                 'name'        => $name,
                 'slug'        => $slug,
                 'description' => $desc
             ]);
 
-            flash('success', "Kategori '{$name}' berhasil ditambahkan.");
+            if ($result) {
+                flash('success', "Kategori '{$name}' berhasil ditambahkan.");
+            } else {
+                flash('error', $api->getLastError() ?: 'Gagal menambahkan kategori.');
+            }
         }
 
         $this->redirect('admin/categories');
@@ -63,14 +61,12 @@ class CategoriesController extends Controller
     public function delete(string $id = ''): void
     {
         $id = (int)$id;
-        $catModel = $this->model('Category');
-        $cat = $catModel->find($id);
+        $api = new ApiClient();
 
-        if ($cat) {
-            $catModel->delete($id);
-            flash('success', "Kategori '{$cat['name']}' berhasil dihapus.");
+        if ($id > 0 && $api->deleteCategory($id)) {
+            flash('success', 'Kategori berhasil dihapus.');
         } else {
-            flash('error', 'Kategori tidak ditemukan.');
+            flash('error', $api->getLastError() ?: 'Gagal menghapus kategori.');
         }
 
         $this->redirect('admin/categories');

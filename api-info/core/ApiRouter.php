@@ -29,6 +29,9 @@ class ApiRouter
             'auth'       => 'AuthController',
             'setting'    => 'SettingController',
             'settings'   => 'SettingController',
+            'media'      => 'MediaController',
+            'dashboard'  => 'DashboardController',
+            'stats'      => 'DashboardController',
         ];
 
         $controllerName = $controllerMap[$resource] ?? (ucfirst($resource) . 'Controller');

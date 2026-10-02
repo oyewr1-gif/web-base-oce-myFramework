@@ -48,6 +48,15 @@ if (!$isCli) {
         . "<h2>🚀 REST API Database Installer</h2>";
 }
 
+if (in_array($username, ['your_db_username', 'root_placeholder']) || in_array($password, ['your_db_password'])) {
+    apiOutput("PERINGATAN: Kredensial di file .env masih menggunakan template default ('{$username}')!", $isCli, 'error');
+    apiOutput("Silakan sesuaikan DB_USERNAME dan DB_PASSWORD di berkas .env Anda terlebih dahulu.", $isCli, 'error');
+    if (!$isCli) {
+        echo "<p style='color:#b91c1c;'>Silakan edit berkas <code>.env</code> Anda, sesuaikan kredensial MySQL, lalu refresh halaman ini.</p></body></html>";
+    }
+    exit(1);
+}
+
 try {
     apiOutput("Menghubungkan ke MySQL server ({$host}:{$port}) user '{$username}'...", $isCli);
     $pdo = new PDO("mysql:host={$host};port={$port};charset={$charset}", $username, $password, [

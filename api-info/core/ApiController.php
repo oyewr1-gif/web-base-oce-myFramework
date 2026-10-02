@@ -65,20 +65,46 @@ class ApiController
 
     private function extractToken(): ?string
     {
-        // 1. Cek dari Header HTTP Authorization
+        // 1. Cek dari getallheaders() (Apache / FPM)
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? '');
+            if (!empty($auth) && preg_match('/Bearer\s+(\S+)/i', $auth, $matches)) {
+                return $matches[1];
+            }
+            if (!empty($headers['X-API-KEY'] ?? ($headers['x-api-key'] ?? ''))) {
+                return $headers['X-API-KEY'] ?? $headers['x-api-key'];
+            }
+        }
+
+        // 2. Cek dari $_SERVER environment
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-        if (!empty($authHeader) && preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        if (!empty($authHeader) && preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
             return $matches[1];
         }
 
-        // 2. Cek dari Header X-API-KEY
         if (!empty($_SERVER['HTTP_X_API_KEY'])) {
             return $_SERVER['HTTP_X_API_KEY'];
         }
 
-        // 3. Fallback dari query parameter ?token=...
+        // 3. Fallback dari query parameter atau post parameter
         if (!empty($_GET['api_token'])) {
             return $_GET['api_token'];
+        }
+        if (!empty($_GET['token'])) {
+            return $_GET['token'];
+        }
+        if (!empty($_POST['api_token'])) {
+            return $_POST['api_token'];
+        }
+        if (!empty($_POST['token'])) {
+            return $_POST['token'];
+        }
+        if (!empty($this->input['api_token'])) {
+            return $this->input['api_token'];
+        }
+        if (!empty($this->input['token'])) {
+            return $this->input['token'];
         }
 
         return null;

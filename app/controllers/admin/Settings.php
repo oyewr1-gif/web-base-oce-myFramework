@@ -1,7 +1,7 @@
 <?php
 /**
- * Controller Admin Settings
- * Mengelola konfigurasi umum situs web
+ * Controller Admin Settings (Headless REST API Client)
+ * Mengelola konfigurasi umum situs web via REST API (api-info)
  */
 class SettingsController extends Controller
 {
@@ -13,7 +13,7 @@ class SettingsController extends Controller
 
     public function index(): void
     {
-        $settingModel = $this->model('Setting');
+        $api = new ApiClient();
 
         if ($this->request->isPost()) {
             if (!Request::validateCsrf()) {
@@ -23,18 +23,23 @@ class SettingsController extends Controller
             }
 
             $allowedKeys = ['site_title', 'site_tagline', 'admin_email', 'footer_text'];
-
+            $postData = [];
             foreach ($allowedKeys as $key) {
-                $val = trim((string)$this->request->post($key));
-                $settingModel->set($key, $val);
+                $postData[$key] = trim((string)$this->request->post($key));
             }
 
-            flash('success', 'Pengaturan situs web berhasil diperbarui!');
+            $result = $api->updateSettings($postData);
+            if ($result) {
+                flash('success', 'Pengaturan situs web berhasil diperbarui via API!');
+            } else {
+                flash('error', $api->getLastError() ?: 'Gagal memperbarui pengaturan via API.');
+            }
+
             $this->redirect('admin/settings');
             return;
         }
 
-        $settings = $settingModel->allAsKeyVal();
+        $settings = $api->getSettings();
 
         $this->view('admin/settings/index', [
             'pageTitle' => 'Pengaturan Situs',

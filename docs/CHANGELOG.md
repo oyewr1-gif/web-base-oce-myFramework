@@ -4,6 +4,52 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.2.1] - 2026-10-02
+### Perbaikan Otentikasi Unggah Media & Auto-Healing Sesi REST API
+
+#### Diperbaiki (Fixed)
+- **Token Transmission Multi-Channel**: Pada saat mengunggah file media (`multipart/form-data`), header HTTP terkadang dapat dipangkas oleh server Apache/FastCGI. `core/ApiClient.php` kini mengirimkan token otentikasi melalui 3 saluran sekaligus: Header `Authorization: Bearer <token>`, Header `X-API-KEY: <token>`, dan parameter query URL `?api_token=<token>`, serta di dalam body payload form data.
+- **Auto-Healing Sesi Pengguna**: Jika browser pengguna masih memiliki sesi login lama (sebelum migrasi REST API di mana `Session::get('api_token')` belum tercipta), `core/Controller.php` dan `core/ApiClient.php` secara otomatis mendeteksi dan menginisialisasi token default tanpa memaksa pengguna logout atau memicu pesan error penolakan akses.
+- **Ekstraksi Token API**: `api-info/core/ApiController.php` kini memeriksa parameter `api_token` baik dari Header, URL Query, maupun Form POST body.
+
+---
+
+## [1.2.0] - 2026-10-02
+### Transformasi Menjadi 100% Full Headless REST API Client (Zero Direct Database Access)
+
+#### Arsitektur Baru (Architecture Shift)
+- **Decoupled Architecture**: Seluruh aplikasi CMS Web (`app/controllers/`) kini beroperasi 100% sebagai REST API Client (*Headless CMS*) tanpa query langsung ke database PDO. 
+- Satu-satunya service yang terhubung ke MySQL adalah REST API (`api-info/`).
+- Aplikasi web berkomunikasi ke `api-info` via HTTP REST API Client menggunakan token otentikasi Bearer.
+
+#### Ditambahkan (Added)
+- `api-info/controllers/DashboardController.php`: Endpoint agregasi statistik sistem (`/dashboard/stats`) untuk menghitung total artikel, draft, kategori, media, dan pengguna.
+- `api-info/controllers/MediaController.php`: Endpoint REST API (`/media`) untuk galeri file media dan upload file `multipart/form-data`.
+- `api-info/models/ApiMedia.php`: Model mandiri untuk tabel `media` di layer API.
+- `core/ApiClient.php`: Peningkatan menyeluruh untuk mendukung seluruh operasi admin: `login()`, `logout()`, `getDashboardStats()`, `getAdminPosts()`, `createPost()`, `updatePost()`, `deletePost()`, `createCategory()`, `deleteCategory()`, `getMedia()`, `uploadMedia()`, `deleteMedia()`, `updateSettings()`, dan error reporting presisi.
+
+#### Diubah (Changed)
+- `app/controllers/Auth.php`: Login dan Logout diubah 100% memanggil endpoint API `POST /auth/login` dan `POST /auth/logout`. Token sesi disimpan di `Session::set('api_token')`.
+- `app/controllers/admin/Dashboard.php`: Diubah menggunakan `ApiClient::getDashboardStats()` tanpa layer model internal.
+- `app/controllers/admin/Posts.php`: Seluruh operasi CRUD artikel dan upload thumbnail diubah memanggil REST API.
+- `app/controllers/admin/Categories.php`: CRUD kategori diubah memanggil REST API.
+- `app/controllers/admin/Media.php`: Pengelolaan media dan upload diubah memanggil REST API.
+- `app/controllers/admin/Settings.php`: Konfigurasi situs diubah memanggil REST API.
+- `api-info/.htaccess` & `api-info/core/ApiController.php`: Penanganan header `Authorization: Bearer` untuk kompatibilitas penuh Apache/FastCGI/XAMPP.
+
+---
+
+## [1.1.1] - 2026-10-02
+### Peningkatan Deteksi & Penanganan Error Kredensial Database (.env Placeholder Detection)
+
+#### Diperbaiki & Ditingkatkan (Fixed & Enhanced)
+- `core/Database.php`: Menambahkan deteksi cerdas jika berkas `.env` di server produksi masih menggunakan nilai template bawaan (`your_db_username` / `your_db_password`). Jika terdeteksi, sistem menampilkan panduan visual interaktif langkah demi langkah untuk mengonfigurasi `.env` alih-alih hanya pesan error fatal MySQL.
+- `api-info/core/ApiDatabase.php`: Memberikan respons JSON error informatif jika kredensial `.env` pada REST API masih menggunakan template bawaan.
+- `database/install.php` & `api-info/database/install.php`: Menambahkan guard validasi sebelum inisialisasi koneksi PDO untuk mencegah eksekusi installer jika kredensial `.env` belum diisi dengan akun database server nyata.
+- `docs/PRODUCTION_DEPLOYMENT.md`: Panduan khusus langkah konfigurasi database server produksi dan checklist migrasi berkas `.env`.
+
+---
+
 ## [1.1.0] - 2026-10-02
 ### Pemisahan Akses Front-End ke REST API & Portabilitas Server API Terisolasi
 

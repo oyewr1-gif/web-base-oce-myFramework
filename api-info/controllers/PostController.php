@@ -10,8 +10,26 @@ class PostController extends ApiController
         $page  = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $offset = ($page - 1) * $limit;
         $category = $_GET['category'] ?? ($_GET['category_slug'] ?? ($_GET['category_id'] ?? null));
+        $isAdmin = !empty($_GET['admin']) || !empty($_GET['all']);
 
         $postModel = new ApiPost();
+
+        if ($isAdmin) {
+            $this->requireAuth();
+            $status = isset($_GET['status']) && in_array($_GET['status'], ['draft', 'published']) ? $_GET['status'] : null;
+            $posts = $postModel->allWithRelations($status, $limit, $offset);
+            $totalItems = $postModel->countAll($status);
+
+            ApiResponse::success($posts, 'Daftar semua artikel (Admin) berhasil diambil.', 200, [
+                'page'        => $page,
+                'limit'       => $limit,
+                'status'      => $status,
+                'total_items' => $totalItems,
+                'total_pages' => ceil($totalItems / max(1, $limit))
+            ]);
+            return;
+        }
+
         $posts = $postModel->allPublished($limit, $offset, $category);
         $totalItems = $postModel->countPublished($category);
 
@@ -32,7 +50,9 @@ class PostController extends ApiController
         }
 
         $postModel = new ApiPost();
-        $post = $postModel->findDetail($idOrSlug);
+        // Jangan tambah views jika diakses untuk edit oleh admin (ada query ?no_view=1)
+        $increment = empty($_GET['no_view']);
+        $post = $postModel->findDetail($idOrSlug, $increment);
 
         if (!$post) {
             ApiResponse::error("Artikel tidak ditemukan.", 404);
@@ -51,6 +71,7 @@ class PostController extends ApiController
         $slug = trim((string)$this->input('slug'));
         $categoryId = (int)$this->input('category_id');
         $status = in_array($this->input('status'), ['draft', 'published']) ? $this->input('status') : 'published';
+        $thumbnail = trim((string)$this->input('thumbnail', ''));
 
         if (empty($title) || empty($content)) {
             ApiResponse::error("Field 'title' dan 'content' wajib diisi.", 422);
@@ -61,19 +82,25 @@ class PostController extends ApiController
         $slug = trim($slug, '-');
 
         $postModel = new ApiPost();
+        // Cek jika slug sudah ada, beri suffix timestamp
+        if ($postModel->firstWhere("slug = :s", ['s' => $slug])) {
+            $slug .= '-' . time();
+        }
+
         $insertData = [
             'user_id'     => (int)$user['user_id'],
             'category_id' => $categoryId > 0 ? $categoryId : null,
             'title'       => $title,
-            'slug'        => $slug . '-' . time(),
+            'slug'        => $slug,
             'excerpt'     => trim((string)$this->input('excerpt', substr(strip_tags($content), 0, 150) . '...')),
             'content'     => $content,
             'status'      => $status,
+            'thumbnail'   => !empty($thumbnail) ? $thumbnail : null,
             'views'       => 0
         ];
 
         $postId = $postModel->insert($insertData);
-        $created = $postModel->find($postId);
+        $created = $postModel->findDetail($postId, false);
 
         ApiResponse::success($created, "Artikel berhasil dibuat.", 201);
     }
@@ -97,10 +124,14 @@ class PostController extends ApiController
         }
 
         $updateData = [];
-        $fields = ['title', 'slug', 'excerpt', 'content', 'status', 'category_id'];
+        $fields = ['title', 'slug', 'excerpt', 'content', 'status', 'category_id', 'thumbnail'];
         foreach ($fields as $field) {
             if ($this->input($field) !== null) {
-                $updateData[$field] = $this->input($field);
+                $val = $this->input($field);
+                if ($field === 'category_id') {
+                    $val = (int)$val > 0 ? (int)$val : null;
+                }
+                $updateData[$field] = $val;
             }
         }
 
@@ -110,7 +141,7 @@ class PostController extends ApiController
         }
 
         $postModel->update($id, $updateData);
-        $updated = $postModel->find($id);
+        $updated = $postModel->findDetail($id, false);
 
         ApiResponse::success($updated, "Artikel berhasil diperbarui.");
     }

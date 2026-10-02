@@ -1,7 +1,7 @@
 <?php
 /**
- * Controller Admin Posts
- * Mengelola CRUD Artikel dan Halaman
+ * Controller Admin Posts (Headless REST API Client)
+ * Mengelola CRUD Artikel dan Halaman via REST API (api-info)
  */
 class PostsController extends Controller
 {
@@ -13,8 +13,8 @@ class PostsController extends Controller
 
     public function index(): void
     {
-        $postModel = $this->model('Post');
-        $posts = $postModel->allWithRelations();
+        $api = new ApiClient();
+        $posts = $api->getAdminPosts();
 
         $this->view('admin/posts/index', [
             'pageTitle' => 'Manajemen Artikel',
@@ -24,8 +24,8 @@ class PostsController extends Controller
 
     public function create(): void
     {
-        $catModel = $this->model('Category');
-        $categories = $catModel->all('name ASC');
+        $api = new ApiClient();
+        $categories = $api->getCategories();
 
         if ($this->request->isPost()) {
             if (!Request::validateCsrf()) {
@@ -47,53 +47,38 @@ class PostsController extends Controller
                 return;
             }
 
-            if (empty($slug)) {
-                $slug = slugify($title);
-            } else {
-                $slug = slugify($slug);
-            }
+            $slug = empty($slug) ? slugify($title) : slugify($slug);
 
-            // Cek keunikan slug
-            $postModel = $this->model('Post');
-            if ($postModel->findBySlugWithRelations($slug)) {
-                $slug = $slug . '-' . time();
-            }
-
-            // Handle thumbnail upload jika ada
+            // Handle upload thumbnail via API jika ada file
             $thumbnailPath = null;
             $thumbFile = $this->request->file('thumbnail');
             if ($thumbFile && $thumbFile['error'] === UPLOAD_ERR_OK) {
-                $mediaModel = $this->model('Media');
-                try {
-                    $media = $mediaModel->upload($thumbFile);
-                    if ($media) {
-                        $thumbnailPath = $media['filename'];
-                    }
-                } catch (Exception $e) {
-                    flash('error', 'Gagal upload thumbnail: ' . $e->getMessage());
-                    $this->redirect('admin/posts/create');
-                    return;
+                $uploadRes = $api->uploadMedia($thumbFile);
+                if ($uploadRes && !empty($uploadRes['filename'])) {
+                    $thumbnailPath = $uploadRes['filename'];
                 }
             }
 
-            $currentUser = current_user();
-
             $data = [
-                'user_id'     => $currentUser['id'] ?? 1,
                 'category_id' => $categoryId > 0 ? $categoryId : null,
                 'title'       => $title,
                 'slug'        => $slug,
                 'excerpt'     => $excerpt ?: substr(strip_tags($content), 0, 150) . '...',
                 'content'     => $content,
                 'thumbnail'   => $thumbnailPath,
-                'status'      => $status,
-                'views'       => 0
+                'status'      => $status
             ];
 
-            $postModel->insert($data);
-            flash('success', 'Artikel baru berhasil disimpan!');
-            $this->redirect('admin/posts');
-            return;
+            $created = $api->createPost($data);
+            if ($created) {
+                flash('success', 'Artikel baru berhasil disimpan!');
+                $this->redirect('admin/posts');
+                return;
+            } else {
+                flash('error', $api->getLastError() ?: 'Gagal menyimpan artikel baru.');
+                $this->redirect('admin/posts/create');
+                return;
+            }
         }
 
         $this->view('admin/posts/create', [
@@ -105,8 +90,8 @@ class PostsController extends Controller
     public function edit(string $id = ''): void
     {
         $id = (int)$id;
-        $postModel = $this->model('Post');
-        $post = $postModel->find($id);
+        $api = new ApiClient();
+        $post = $api->getPost((string)$id, false);
 
         if (!$post) {
             flash('error', 'Artikel tidak ditemukan.');
@@ -114,8 +99,7 @@ class PostsController extends Controller
             return;
         }
 
-        $catModel = $this->model('Category');
-        $categories = $catModel->all('name ASC');
+        $categories = $api->getCategories();
 
         if ($this->request->isPost()) {
             if (!Request::validateCsrf()) {
@@ -140,19 +124,12 @@ class PostsController extends Controller
             $slug = empty($slug) ? slugify($title) : slugify($slug);
 
             // Handle upload thumbnail baru jika diunggah
-            $thumbnailPath = $post['thumbnail'];
+            $thumbnailPath = $post['thumbnail'] ?? null;
             $thumbFile = $this->request->file('thumbnail');
             if ($thumbFile && $thumbFile['error'] === UPLOAD_ERR_OK) {
-                $mediaModel = $this->model('Media');
-                try {
-                    $media = $mediaModel->upload($thumbFile);
-                    if ($media) {
-                        $thumbnailPath = $media['filename'];
-                    }
-                } catch (Exception $e) {
-                    flash('error', 'Gagal upload thumbnail: ' . $e->getMessage());
-                    $this->redirect('admin/posts/edit/' . $id);
-                    return;
+                $uploadRes = $api->uploadMedia($thumbFile);
+                if ($uploadRes && !empty($uploadRes['filename'])) {
+                    $thumbnailPath = $uploadRes['filename'];
                 }
             }
 
@@ -166,14 +143,20 @@ class PostsController extends Controller
                 'status'      => $status
             ];
 
-            $postModel->update($id, $updateData);
-            flash('success', 'Perubahan artikel berhasil disimpan!');
-            $this->redirect('admin/posts');
-            return;
+            $updated = $api->updatePost($id, $updateData);
+            if ($updated) {
+                flash('success', 'Perubahan artikel berhasil disimpan!');
+                $this->redirect('admin/posts');
+                return;
+            } else {
+                flash('error', $api->getLastError() ?: 'Gagal memperbarui artikel.');
+                $this->redirect('admin/posts/edit/' . $id);
+                return;
+            }
         }
 
         $this->view('admin/posts/edit', [
-            'pageTitle'  => 'Edit Artikel: ' . $post['title'],
+            'pageTitle'  => 'Edit Artikel: ' . ($post['title'] ?? ''),
             'post'       => $post,
             'categories' => $categories
         ], 'layouts/admin');
@@ -182,14 +165,12 @@ class PostsController extends Controller
     public function delete(string $id = ''): void
     {
         $id = (int)$id;
-        $postModel = $this->model('Post');
-        $post = $postModel->find($id);
+        $api = new ApiClient();
 
-        if ($post) {
-            $postModel->delete($id);
-            flash('success', 'Artikel "' . $post['title'] . '" berhasil dihapus.');
+        if ($id > 0 && $api->deletePost($id)) {
+            flash('success', 'Artikel berhasil dihapus.');
         } else {
-            flash('error', 'Artikel tidak ditemukan.');
+            flash('error', $api->getLastError() ?: 'Gagal menghapus artikel.');
         }
 
         $this->redirect('admin/posts');

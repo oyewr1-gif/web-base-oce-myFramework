@@ -19,10 +19,39 @@ Framework ini dirancang tanpa Composer (*zero-dependency*), dengan mengadopsi po
    - Pemisahan ketat antara data layer (Model), alur logika bisnis (Controller), dan representasi antarmuka (View).
 5. **Template View with Output Buffering**:
    - Menggunakan buffer memori internal PHP (`ob_start()`, `ob_get_clean()`) untuk menginjeksi view spesifik ke dalam master layout modular.
+6. **Headless Decoupled Architecture**:
+   - Web CMS beroperasi 100% sebagai consumer REST API via `core/ApiClient.php`. Tidak ada controller yang mengakses database langsung.
 
 ---
 
-## 2. Alur Eksekusi Web CMS Utama
+## 2. Diagram Arsitektur Headless CMS & REST API
+
+```mermaid
+flowchart TD
+    subgraph Frontend["CMS Web Application (Zero Database Access)"]
+        A["Pengunjung (Portal Berita)"] -->|HTTP Request| AC["core/ApiClient.php"]
+        B["Halaman Login (/auth/login)"] -->|POST /auth/login| AC
+        C["Admin Dashboard (/admin/*)"] -->|Bearer Token API| AC
+    end
+
+    subgraph BackendAPI["Standalone REST API Engine (api-info/)"]
+        AC -->|JSON API Requests| R["api-info/core/ApiRouter.php"]
+        R --> C1["AuthController"]
+        R --> C2["DashboardController"]
+        R --> C3["PostController"]
+        R --> C4["CategoryController"]
+        R --> C5["MediaController"]
+        R --> C6["SettingController"]
+    end
+
+    subgraph Storage["Database Server"]
+        BackendAPI -->|PDO Connection (api-info/core/ApiDatabase.php)| DB[("MySQL / MariaDB Database")]
+    end
+```
+
+---
+
+## 3. Alur Eksekusi Web CMS Utama
 
 ```mermaid
 sequenceDiagram

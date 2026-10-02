@@ -1,7 +1,8 @@
 <?php
 /**
- * Controller Auth
- * Mengelola proses masuk (login) dan keluar (logout)
+ * Controller Auth (Headless REST API Client)
+ * Mengelola proses masuk (login) dan keluar (logout) 100% via REST API (api-info)
+ * Tanpa akses langsung ke model database
  */
 class AuthController extends Controller
 {
@@ -33,18 +34,21 @@ class AuthController extends Controller
                 return;
             }
 
-            $userModel = $this->model('User');
-            $user = $userModel->authenticate($identity, $password);
+            // Otentikasi murni melalui REST API (api-info)
+            $api = new ApiClient();
+            $authData = $api->login($identity, $password);
 
-            if ($user) {
-                // Simpan user info ke session (kecuali password hash)
-                unset($user['password']);
-                Session::set('user', $user);
-                flash('success', 'Selamat datang kembali, ' . $user['name'] . '!');
+            if ($authData && !empty($authData['access_token'])) {
+                // Simpan profil user dan token sesi API
+                Session::set('user', $authData['user']);
+                Session::set('api_token', $authData['access_token']);
+                
+                flash('success', 'Selamat datang kembali, ' . ($authData['user']['name'] ?? 'Admin') . '!');
                 $this->redirect('admin/dashboard');
                 return;
             } else {
-                flash('error', 'Email/Username atau password salah.');
+                $errorMsg = $api->getLastError() ?: 'Email/Username atau password salah.';
+                flash('error', $errorMsg);
                 $this->redirect('auth/login');
                 return;
             }
@@ -57,7 +61,14 @@ class AuthController extends Controller
 
     public function logout(): void
     {
+        $token = Session::get('api_token');
+        if (!empty($token)) {
+            $api = new ApiClient();
+            $api->logout($token);
+        }
+
         Session::remove('user');
+        Session::remove('api_token');
         Session::destroy();
         flash('success', 'Anda telah berhasil logout.');
         $this->redirect('auth/login');

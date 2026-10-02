@@ -48,6 +48,15 @@ if (!$isCli) {
         . "<h2>🛠️ Framework CMS Database Installer</h2>";
 }
 
+if (in_array($username, ['your_db_username', 'root_placeholder']) || in_array($password, ['your_db_password'])) {
+    output("PERINGATAN: Kredensial di file .env masih menggunakan template default ('{$username}')!", $isCli, 'error');
+    output("Silakan buka dan ubah file .env Anda terlebih dahulu (sesuaikan DB_USERNAME dan DB_PASSWORD).", $isCli, 'error');
+    if (!$isCli) {
+        echo "<p style='color:#b91c1c;'>Silakan edit berkas <code>.env</code> di root folder, masukkan username dan password MySQL Anda, kemudian refresh halaman ini.</p></body></html>";
+    }
+    exit(1);
+}
+
 try {
     output("Mencoba menghubungkan ke MySQL server ({$host}:{$port}) dengan user '{$username}'...", $isCli);
     $pdo = new PDO("mysql:host={$host};port={$port};charset={$charset}", $username, $password, [
