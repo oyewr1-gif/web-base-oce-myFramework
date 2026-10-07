@@ -4,6 +4,23 @@ Semua penambahan, modifikasi, dan perbaikan signifikan pada proyek **MyFrameWork
 
 ---
 
+## [1.4.0] - 2026-10-07
+### Inisialisasi Database & Skema Tabel Otomatis Saat Runtime (Server Produksi)
+
+#### Ditambahkan (Added)
+- **Class Auto-Initializer CMS Web (`core/DatabaseInitializer.php`)**:
+  - Menambahkan komponen pembantu untuk secara otomatis mendeteksi keberadaan database MySQL (`CREATE DATABASE IF NOT EXISTS`) dan membuat struktur skema tabel (`schema.sql`) jika belum ada saat aplikasi menerima HTTP request pertama di server produksi.
+  - **Seeding Kondisional**: Secara cerdas memeriksa keberadaan baris pengguna di tabel `users`. Jika tabel masih kosong (`count == 0`), seeder awal (superadmin, editor, kategori dasar, post perkenalan, pengaturan situs, dan token API default) akan dimasukkan secara otomatis.
+- **Class Auto-Initializer REST API (`api-info/core/ApiDatabaseInitializer.php`)**:
+  - Menambahkan fungsi inisialisasi skema tabel dan seeder awal mandiri khusus untuk aplikasi Standalone REST API (`api-info`).
+
+#### Diperbarui & Dioptimalkan (Enhanced)
+- **Core Database PDO Connection Handler (`core/Database.php` & `api-info/core/ApiDatabase.php`)**:
+  - Mengintegrasikan mekanisme penanganan *runtime error catching* untuk menangkap exception database belum ditemukan (`PDOException` dengan SQLSTATE 1049 / `Unknown database`) dan tabel belum diinisialisasi.
+  - Memanggil `DatabaseInitializer::initialize()` secara otomatis dan transparan tanpa menghentikan atau mengganggu eksekusi request pengguna saat aplikasi baru dipindahkan ke lingkungan server produksi.
+
+---
+
 ## [1.3.7] - 2026-10-02
 ### Penanganan Tangguh REST API Media, Auto-Migrasi Tabel `media`, & Penanganan Respons JSON
 

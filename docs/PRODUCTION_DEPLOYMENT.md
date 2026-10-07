@@ -67,20 +67,26 @@ GRANT ALL PRIVILEGES ON nama_database_produksi_anda.* TO 'nama_user_mysql_anda'@
 FLUSH PRIVILEGES;
 ```
 
-### Langkah 4: Isi Skema dan Data Seeder
-Jika database sudah dibuat namun tabel-tabelnya masih kosong, jalankan salah satu dari dua cara berikut:
+### Langkah 4: Inisialisasi Database dan Skema Tabel (Otomatis / Manual)
 
-**Cara A: Melalui Command Line (CLI)**
+Framework ini telah dilengkapi dengan **Fitur Auto-Inisialisasi Otomatis saat Runtime**.
+
+**Cara A: Otomatis saat Akses Pertama (Rekomendasi)**
+Anda **tidak perlu** mengimpor file SQL manual atau menjalankan skrip installer. Saat Anda membuka halaman website `https://domain-anda.com` untuk pertama kali, framework akan:
+1. Mendeteksi jika database MySQL di server produksi belum dibuat, lalu membuat database tersebut (`CREATE DATABASE IF NOT EXISTS`).
+2. Membuat seluruh skema tabel (`schema.sql`).
+3. Mengisi data seeder awal (Akun Admin, Editor, Pengaturan situs, Kategori, & Token REST API) secara otomatis apabila tabel pengguna masih kosong.
+
+**Cara B: Melalui Command Line (CLI)**
 ```bash
 php database/install.php
 ```
 
-**Cara B: Melalui Browser Web**
+**Cara C: Melalui Browser Web**
 Buka URL installer melalui browser:
 ```text
 https://domain-anda.com/database/install.php
 ```
-*Installer akan otomatis membuat tabel `users`, `categories`, `posts`, `media`, `settings`, `api_tokens` beserta akun default admin.*
 
 ---
 

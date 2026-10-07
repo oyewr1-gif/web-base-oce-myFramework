@@ -75,6 +75,9 @@ flowchart TD
    - Aplikasi mandiri dalam folder `api-info/` dengan konfigurasi terpisah.
    - Respon JSON terstandarisasi dengan dukungan CORS.
    - Proteksi endpoint dengan Bearer Token / API Key.
+8. **Auto-Inisialisasi Database & Skema Tabel (Server Produksi)**:
+   - Terintegrasi langsung dengan PDO (`core/DatabaseInitializer.php` & `api-info/core/ApiDatabaseInitializer.php`).
+   - Otomatis membuat database MySQL (`CREATE DATABASE IF NOT EXISTS`), mengimpor skema tabel (`schema.sql`), dan menjalankan seeder kondisional jika database di server produksi belum tersedia saat request pertama diterima.
 
 ---
 

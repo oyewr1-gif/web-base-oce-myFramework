@@ -2,6 +2,8 @@
 /**
  * Core Database Connection (PDO Singleton)
  */
+require_once __DIR__ . '/DatabaseInitializer.php';
+
 class Database
 {
     private static ?PDO $instance = null;
@@ -14,13 +16,13 @@ class Database
         if (self::$instance === null) {
             $config = require APP_PATH . '/config/database.php';
             
-            $driver = $config['driver'] ?? 'mysql';
-            $host = $config['host'] ?? 'localhost';
-            $port = $config['port'] ?? 3306;
+            $driver   = $config['driver'] ?? 'mysql';
+            $host     = $config['host'] ?? 'localhost';
+            $port     = $config['port'] ?? 3306;
             $database = $config['database'] ?? 'cms_framework';
             $username = $config['username'] ?? 'info';
             $password = $config['password'] ?? 'Info123*';
-            $charset = $config['charset'] ?? 'utf8mb4';
+            $charset  = $config['charset'] ?? 'utf8mb4';
 
             try {
                 if ($driver === 'sqlite') {
@@ -33,8 +35,23 @@ class Database
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                         PDO::ATTR_EMULATE_PREPARES   => false,
                     ]);
+
+                    // Pengecekan jika database ada tapi tabel belum diinisialisasi
+                    if (!DatabaseInitializer::tableExists(self::$instance, 'users')) {
+                        self::$instance = DatabaseInitializer::initialize($config, ROOT_PATH . '/database/schema.sql');
+                    }
                 }
             } catch (PDOException $e) {
+                // Tangkap jika database belum dibuat di server (Error code 1049 / Unknown database)
+                if (self::isMissingDatabaseError($e)) {
+                    try {
+                        self::$instance = DatabaseInitializer::initialize($config, ROOT_PATH . '/database/schema.sql');
+                        return self::$instance;
+                    } catch (Throwable $initEx) {
+                        // Jika auto-init gagal, gunakan exception asli
+                    }
+                }
+
                 $isPlaceholder = in_array($username, ['your_db_username', 'root_placeholder']) 
                               || in_array($password, ['your_db_password']);
 
@@ -62,7 +79,7 @@ class Database
                         . "&bull; Database: <code>{$database}</code><br>"
                         . "&bull; User: <code>{$username}</code>"
                         . "</p>"
-                        . "<p style='font-size:13px;color:#6b7280;'>Jika tabel belum dibuat, silakan import <code>database/schema.sql</code> atau jalankan installer <code>php database/install.php</code>.</p>";
+                        . "<p style='font-size:13px;color:#6b7280;'>Auto-inisialisasi database telah diaktifkan saat database/tabel belum tersedia.</p>";
                 }
 
                 $html .= "</div>";
@@ -72,4 +89,10 @@ class Database
 
         return self::$instance;
     }
+
+    private static function isMissingDatabaseError(PDOException $e): bool
+    {
+        return $e->getCode() == 1049 || str_contains(strtolower($e->getMessage()), 'unknown database');
+    }
 }
+

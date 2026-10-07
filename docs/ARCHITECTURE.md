@@ -21,6 +21,8 @@ Framework ini dirancang tanpa Composer (*zero-dependency*), dengan mengadopsi po
    - Menggunakan buffer memori internal PHP (`ob_start()`, `ob_get_clean()`) untuk menginjeksi view spesifik ke dalam master layout modular.
 6. **Headless Decoupled Architecture**:
    - Web CMS beroperasi 100% sebagai consumer REST API via `core/ApiClient.php`. Tidak ada controller yang mengakses database langsung.
+7. **Auto-Database & Schema Initializer**:
+   - Component `DatabaseInitializer` (`core/DatabaseInitializer.php`) & `ApiDatabaseInitializer` (`api-info/core/ApiDatabaseInitializer.php`) secara otomatis mendeteksi ketiadaan database/tabel MySQL di server produksi saat PDO melempar exception koneksi (`SQLSTATE 1049`), lalu melakukan pembentukan database, skema tabel, dan seeder awal secara transparan pada HTTP request pertama.
 
 ---
 

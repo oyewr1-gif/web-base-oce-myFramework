@@ -2,6 +2,8 @@
 /**
  * Database Connection Manager Mandiri untuk REST API (api-info)
  */
+require_once __DIR__ . '/ApiDatabaseInitializer.php';
+
 class ApiDatabase
 {
     private static ?PDO $instance = null;
@@ -27,7 +29,22 @@ class ApiDatabase
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES   => false,
                 ]);
+
+                // Auto-init jika database ada namun tabel belum dibuat
+                if (!ApiDatabaseInitializer::tableExists(self::$instance, 'users')) {
+                    self::$instance = ApiDatabaseInitializer::initialize($config, API_PATH . '/database/schema.sql');
+                }
             } catch (PDOException $e) {
+                // Tangkap jika database belum dibuat di MySQL server (Error code 1049)
+                if (self::isMissingDatabaseError($e)) {
+                    try {
+                        self::$instance = ApiDatabaseInitializer::initialize($config, API_PATH . '/database/schema.sql');
+                        return self::$instance;
+                    } catch (Throwable $initEx) {
+                        // Jika gagal, lanjut ke error response
+                    }
+                }
+
                 $isPlaceholder = in_array($username, ['your_db_username', 'root_placeholder']) 
                               || in_array($password, ['your_db_password']);
                 if ($isPlaceholder) {
@@ -40,4 +57,10 @@ class ApiDatabase
 
         return self::$instance;
     }
+
+    private static function isMissingDatabaseError(PDOException $e): bool
+    {
+        return $e->getCode() == 1049 || str_contains(strtolower($e->getMessage()), 'unknown database');
+    }
 }
+
